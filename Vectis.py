@@ -1,18 +1,19 @@
 import streamlit as st
-from nba_api.stats.static import players, teams
+from nba_api.stats.static import players
 from nba_api.stats.endpoints import playergamelog
 import pandas as pd
-from datetime import datetime, timedelta
 
-# 1. Configuración Pro
+# Configuración Pro
 st.set_page_config(page_title="Vectis NBA Pro", layout="wide")
 st.title("🏀 Vectis: NBA Intelligence Dashboard")
-st.markdown("---")
 
-# Barra lateral: Buscador y Filtro de Apuestas
+# Barra lateral: Configuración
 st.sidebar.header("Configuración de Análisis")
-busqueda = st.sidebar.text_input("Jugador (ej: Doncic, Tatum, Embiid):")
-linea_apuesta = st.sidebar.number_input("Línea de Puntos (Over/Under):", value=25.5, step=0.5)
+busqueda = st.sidebar.text_input("Jugador (ej: Doncic, Tatum, Wembanyama):")
+
+# Selector de Mercado
+mercado = st.sidebar.selectbox("Seleccionar Mercado:", ["PTS", "REB", "AST", "STL", "BLK"])
+linea_apuesta = st.sidebar.number_input(f"Línea de {mercado} (Over/Under):", value=1.5 if mercado in ["STL", "BLK"] else 10.5, step=0.5)
 
 if busqueda:
     nba_players = players.find_players_by_full_name(busqueda)
@@ -23,69 +24,71 @@ if busqueda:
         player = [p for p in nba_players if p['full_name'] == seleccion][0]
         
         try:
-            # Consultar temporada actual
             log = playergamelog.PlayerGameLog(player_id=player['id'], season='2025-26')
             df = log.get_data_frames()[0]
             
             if not df.empty:
-                # --- PROCESAMIENTO DE DATOS ---
-                df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE'])
-                # Calcular Back-to-Back (si jugó el día anterior)
-                df['FECHA_PREVIA'] = df['GAME_DATE'].shift(-1)
-                df['B2B'] = (df['GAME_DATE'] - df['FECHA_PREVIA']).dt.days == 1
+                # --- LIMPIEZA DE DATOS (Solo Fecha) ---
+                df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE']).dt.date
+                
+                # --- CÁLCULO DE DOBLES Y TRIPLES DOBLES ---
+                # Un doble-doble es 10+ en al menos dos de estas categorías
+                def check_double_triple(row):
+                    stats = [row['PTS'], row['REB'], row['AST'], row['STL'], row['BLK']]
+                    diez_o_mas = sum(1 for x in stats if x >= 10)
+                    return "Triple-Double" if diez_o_mas >= 3 else ("Double-Double" if diez_o_mas >= 2 else "-")
 
-                # --- MÉTRICAS DE APUESTAS (OVER/UNDER) ---
+                df['SPECIAL'] = df.apply(check_double_triple, axis=1)
+
+                # --- MÉTRICAS PRINCIPALES ---
                 ultimos_15 = df.head(15)
-                overs = (ultimos_15['PTS'] > linea_apuesta).sum()
-                porcentaje_over = (overs / 15) * 100
+                overs = (ultimos_15[mercado] > linea_apuesta).sum()
+                dd_count = (df.head(15)['SPECIAL'] != "-").sum()
 
-                col1, col2, col3 = st.columns(3)
-                col1.metric(f"Overs de {linea_apuesta}", f"{overs}/15", f"{porcentaje_over:.0f}% de éxito")
-                col2.metric("Promedio PTS (L10)", f"{df.head(10)['PTS'].mean():.1f}")
-                col3.metric("Máximo Temporada", f"{df['PTS'].max()} pts")
+                col1, col2, col3, col4 = st.columns(4)
+                col1.metric(f"Overs {mercado} ({linea_apuesta})", f"{overs}/15")
+                col2.metric(f"Promedio {mercado} (L10)", f"{df.head(10)[mercado].mean():.1f}")
+                col3.metric("Dobles/Triples (L15)", f"{dd_count}")
+                col4.metric(f"Récord {mercado}", f"{df[mercado].max()}")
 
                 st.markdown("---")
 
-                # --- FILTROS AVANZADOS ---
-                c1, c2 = st.columns(2)
-                with c1:
-                    filtro_b2b = st.checkbox("Mostrar solo partidos en Back-to-Back (Cansancio)")
-                with c2:
-                    tipo_partido = st.radio("Ubicación:", ["Todos", "Local", "Visitante"], horizontal=True)
-
-                # Aplicar Filtros
+                # --- FILTROS ---
+                tipo_partido = st.radio("Ubicación:", ["Todos", "Local", "Visitante"], horizontal=True)
                 df_final = df.copy()
-                if filtro_b2b:
-                    df_final = df_final[df_final['B2B'] == True]
                 if tipo_partido == "Local":
                     df_final = df_final[df_final['MATCHUP'].str.contains('vs.')]
                 elif tipo_partido == "Visitante":
                     df_final = df_final[df_final['MATCHUP'].str.contains('@')]
 
-                # --- ESTILO DE TABLA ---
+                # --- TABLA CON ESTILO ---
                 def style_results(row):
-                    # Color para el Over/Under
-                    color = 'background-color: #2ecc71; color: white' if row['PTS'] > linea_apuesta else 'background-color: #e74c3c; color: white'
-                    # Estilo para Back-to-Back
-                    b2b_style = 'font-weight: bold; color: #f39c12' if row['B2B'] else ''
-                    return [None, None, None, color, None, None, b2b_style]
+                    # Color basado en el mercado seleccionado
+                    color = 'background-color: #2ecc71; color: white' if row[mercado] > linea_apuesta else 'background-color: #e74c3c; color: white'
+                    # Resaltar si hizo Doble o Triple Doble
+                    sp_style = 'font-weight: bold; color: #f39c12' if row['SPECIAL'] != "-" else ''
+                    return [None, None, None, 
+                            color if mercado == "PTS" else '', 
+                            color if mercado == "REB" else '', 
+                            color if mercado == "AST" else '', 
+                            color if mercado == "STL" else '', 
+                            color if mercado == "BLK" else '', 
+                            sp_style]
 
-                cols_pro = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'B2B']
+                cols_pro = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'SPECIAL']
                 display_df = df_final[cols_pro].head(15)
                 
-                st.subheader(f"Análisis detallado: {player['full_name']}")
+                st.subheader(f"Historial detallado: {player['full_name']}")
                 st.table(display_df.style.apply(style_results, axis=1))
 
-                # Gráfico de puntos vs Línea de Apuesta
-                chart_data = display_df[['GAME_DATE', 'PTS']].copy()
-                chart_data['LINEA'] = linea_apuesta
-                st.line_chart(chart_data.set_index('GAME_DATE'))
+                # Gráfico dinámico según mercado
+                st.line_chart(display_df.set_index('GAME_DATE')[mercado])
 
             else:
-                st.warning("No hay partidos registrados este año.")
+                st.warning("No hay datos este año.")
         except Exception as e:
-            st.error(f"Error al conectar con la NBA: {e}")
+            st.error(f"Error: {e}")
     else:
         st.error("Jugador no encontrado.")
 else:
-    st.info("Escribe un nombre en la izquierda para analizar sus rachas.")
+    st.info("Escribe un nombre a la izquierda.")
