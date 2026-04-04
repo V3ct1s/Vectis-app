@@ -121,4 +121,4 @@ else:
     st.info("Utiliza el buscador lateral para empezar el análisis.")
 
 st.sidebar.markdown("---")
-st.sidebar.caption("⚠️ +18 | Vectis es una herramienta estadística informativa. Juega con responsabilidad.")
+st.sidebar.caption("⚠️ +18 | Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
