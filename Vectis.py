@@ -92,4 +92,4 @@ else:
     st.info("Utiliza el buscador de la izquierda para empezar.")
 
 st.sidebar.markdown("---")
-st.sidebar.caption("⚠️ Vectis es una herramienta estadística. Juega con responsabilidad.")
+st.sidebar.caption("⚠️ Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
