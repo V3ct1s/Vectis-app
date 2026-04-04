@@ -5,7 +5,6 @@ import pandas as pd
 
 # 1. FUNCIONES AUXILIARES
 def check_special_stats(row):
-    """Calcula si el partido es Triple-Doble o Doble-Doble"""
     stats = [row['PTS'], row['REB'], row['AST'], row['STL'], row['BLK']]
     diez_o_mas = sum(1 for x in stats if x >= 10)
     if diez_o_mas >= 3: return "TD"
@@ -13,11 +12,9 @@ def check_special_stats(row):
     return "-"
 
 def color_mercado(val, linea):
-    """Aplica color verde si supera la línea, rojo si no"""
     color = '#2ecc71' if val > linea else '#e74c3c'
     return f'background-color: {color}; color: white'
 
-# Diccionario de traducción para la API
 nombres_api = {"PTS": "PTS", "REB": "REB", "AST": "AST", "ROB": "STL", "TAP": "BLK"}
 
 # 2. CONFIGURACIÓN DE PÁGINA
@@ -32,11 +29,9 @@ except:
 st.sidebar.markdown("---")
 st.sidebar.header("🔍 Buscador de Patrones")
 
-# PASO 1: Buscar nombre
 busqueda = st.sidebar.text_input("1. Escribe nombre (ej: Stephen Curry):")
 player_obj = None
 
-# PASO 2: Confirmar jugador
 if busqueda:
     nba_players = players.find_players_by_full_name(busqueda)
     if nba_players:
@@ -48,25 +43,30 @@ if busqueda:
 
 st.sidebar.markdown("---")
 
-# PASO 3: Mercado y Slider dinámico
+# PASO 3: Slider Inteligente (Solo valores .5 como Winamax)
 mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
 mercado_real = nombres_api[mercado_visual]
 
+# Definimos los rangos de .5 en .5
 if mercado_visual == "PTS":
-    min_v, max_v, default_v = 5.5, 50.5, 20.5
+    opciones = [x + 0.5 for x in range(5, 51)] # 5.5, 6.5 ... 50.5
+    idx_default = 15 # Empieza en 20.5
 elif mercado_visual == "REB":
-    min_v, max_v, default_v = 2.5, 20.5, 8.5
+    opciones = [x + 0.5 for x in range(1, 21)] # 1.5, 2.5 ... 20.5
+    idx_default = 7 # Empieza en 8.5
 elif mercado_visual == "AST":
-    min_v, max_v, default_v = 1.5, 18.5, 5.5
+    opciones = [x + 0.5 for x in range(0, 19)] # 0.5, 1.5 ... 18.5
+    idx_default = 5 # Empieza en 5.5
 else: # ROB y TAP
-    min_v, max_v, default_v = 0.5, 6.5, 1.5
+    opciones = [x + 0.5 for x in range(0, 8)] # 0.5, 1.5 ... 7.5
+    idx_default = 1 # Empieza en 1.5
 
-linea_apuesta = st.sidebar.slider(
-    "Línea de valor:",
-    min_value=min_v,
-    max_value=max_v,
-    value=default_v,
-    step=0.5
+# Usamos select_slider para forzar que solo elija valores de la lista .5
+linea_apuesta = st.sidebar.select_slider(
+    "Línea de valor (Winamax):",
+    options=opciones,
+    value=opciones[idx_default],
+    help="Solo valores .5 para evitar empates, tal como en las casas de apuestas."
 )
 
 st.sidebar.markdown("---")
@@ -79,12 +79,10 @@ st.title("🏀 Inteligencia Estadística NBA")
 
 if player_obj:
     try:
-        # Llamada a la API
         log = playergamelog.PlayerGameLog(player_id=player_obj['id'], season='2025-26')
         df = log.get_data_frames()[0]
         
         if not df.empty:
-            # Obtención de equipo
             equipo_str = ""
             if 'TEAM_ABBREVIATION' in df.columns:
                 equipo_str = f" | {df.iloc[0]['TEAM_ABBREVIATION']}"
