@@ -30,20 +30,33 @@ st.sidebar.markdown("""<a href="https://www.paypal.me/VectisNBA" target="_blank"
 
 st.sidebar.markdown("---")
 
-# BANNER WINAMAX
-st.sidebar.markdown("""<div style="background-color:#1a1a1a; padding:20px; border-radius:12px; border: 2px solid #e74c3c; text-align:center;"><h3 style="color:white; margin:0; font-size:18px;">🔴 BONO WINAMAX</h3><p style="color:#ffffff; font-size:13px; margin:10px 0;">¡Duplica tu primer depósito para apostar en la NBA!</p><a href="TU_LINK_AQUI" target="_blank"><button style="width:100%; background-color:#e74c3c; color:white; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:15px;">👉 REGISTRARSE AQUÍ</button></a><p style="color:#888888; font-size:9px; margin-top:12px;">Solo nuevos usuarios. +18 Juega con responsabilidad.</p></div>""", unsafe_allow_html=True)
+# SECCIÓN DE ESTADO (En lugar del bono de Winamax)
+st.sidebar.success("✅ Herramienta de Análisis Estadístico Activa")
+st.sidebar.write("Datos actualizados de la API oficial de la NBA.")
 
 st.sidebar.markdown("---")
-st.sidebar.header("🔍 Análisis")
-busqueda = st.sidebar.text_input("Buscar Jugador:")
+st.sidebar.header("🔍 Análisis de Jugador")
+busqueda = st.sidebar.text_input("Buscar Jugador (ej: Doncic):")
 mercado = st.sidebar.selectbox("Mercado:", ["PTS", "REB", "AST", "STL", "BLK"])
 linea_apuesta = st.sidebar.number_input(f"Línea de {mercado}:", value=10.5, step=0.5)
 
-# PIE LEGAL
+# --- AVISOS LEGALES Y JUEGO RESPONSABLE (CLAVE PARA AFILIACIÓN) ---
 st.sidebar.markdown("---")
-st.sidebar.markdown("""<div style="text-align:center; opacity:0.8;"><img src="https://www.jugarbien.es/sites/default/files/images/logotipos/logo_18.png" width="30" style="margin-right:10px;"><img src="https://www.jugarbien.es/sites/default/files/images/logotipos/logo_jugarbien.png" width="80"><p style="font-size:10px; color:#666; margin-top:10px;">VectisNBA es un portal estadístico. Juega con responsabilidad.</p></div>""", unsafe_allow_html=True)
+st.sidebar.markdown("""
+<div style="text-align:center; background-color:#f0f2f6; padding:10px; border-radius:10px; border: 1px solid #ddd;">
+    <p style="font-size:11px; font-weight:bold; color:#333; margin-bottom:5px;">CONTENIDO PARA +18 AÑOS</p>
+    <div style="display:flex; justify-content:center; gap:10px; margin-bottom:10px;">
+        <img src="https://www.jugarbien.es/sites/default/files/images/logotipos/logo_18.png" width="35">
+        <img src="https://www.jugarbien.es/sites/default/files/images/logotipos/logo_jugarbien.png" width="85">
+    </div>
+    <p style="font-size:10px; color:#666; line-height:1.2;">
+        VectisNBA es una plataforma informativa de estadísticas. El juego debe ser una forma de ocio, no una fuente de ingresos.
+    </p>
+    <p style="font-size:10px; font-weight:bold; color:#e74c3c; margin-top:5px;">SIN DIVERSIÓN NO HAY JUEGO</p>
+</div>
+""", unsafe_allow_html=True)
 
-# 3. DATOS
+# 3. LÓGICA DE DATOS
 if busqueda:
     nba_players = players.find_players_by_full_name(busqueda)
     if nba_players:
@@ -56,12 +69,4 @@ if busqueda:
                 df['SPECIAL'] = df.apply(check_double_triple, axis=1)
                 st.subheader(f"Dashboard: {player['full_name']}")
                 u15 = df.head(15)
-                overs = (u15[mercado] > linea_apuesta).sum()
-                c1, c2, c3, c4 = st.columns(4)
-                c1.metric(f"Overs {mercado}", f"{overs}/15", f"{int((overs/15)*100)}% Win Rate")
-                c2.metric("Promedio L10", f"{df.head(10)[mercado].mean():.1f}")
-                c3.metric("D-D / T-D (L15)", f"{(u15['SPECIAL'] != '-').sum()}")
-                c4.metric("Máximo", f"{df[mercado].max()}")
-                st.table(df[['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'SPECIAL']].head(15).style.applymap(lambda x: color_mercado(x, linea_apuesta), subset=[mercado]))
-                st.line_chart(df.head(15).set_index('GAME_DATE')[mercado])
-        except Exception as e: st.error(f"Error: {e}")
+                overs = (u
