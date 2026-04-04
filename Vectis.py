@@ -34,7 +34,7 @@ st.sidebar.header("🔍 Buscador de Patrones")
 busqueda = st.sidebar.text_input("1. Escribe nombre (ej: Doncic):")
 player_obj = None
 
-# PASO 2: Confirmar jugador (Entre buscador y mercado)
+# PASO 2: Confirmar jugador
 if busqueda:
     nba_players = players.find_players_by_full_name(busqueda)
     if nba_players:
@@ -46,10 +46,10 @@ if busqueda:
 
 st.sidebar.markdown("---")
 
-# PASO 3: Mercado
+# PASO 3: Mercado y Estadística (Solo "Estadística")
 mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
 mercado_real = nombres_api[mercado_visual]
-linea_apuesta = st.sidebar.number_input(f"Estadística de {mercado_visual}:", value=10.5, step=0.5)
+linea_apuesta = st.sidebar.number_input("Estadística:", value=10.5, step=0.5)
 
 st.sidebar.markdown("---")
 st.sidebar.header("🚀 Comunidad")
@@ -61,7 +61,6 @@ st.title("🏀 Inteligencia Estadística NBA")
 
 if player_obj:
     try:
-        # Petición a la API
         log = playergamelog.PlayerGameLog(player_id=player_obj['id'], season='2025-26')
         df = log.get_data_frames()[0]
         
@@ -83,7 +82,6 @@ if player_obj:
             st.markdown("---")
             
             st.write("### Últimos 15 encuentros")
-            # Preparar tabla con nombres en español
             df_tabla = df.rename(columns={'STL': 'ROB', 'BLK': 'TAP'})
             cols_tabla = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'ROB', 'TAP', 'SPECIAL']
             
@@ -98,6 +96,6 @@ if player_obj:
 else:
     st.info("Utiliza el buscador de la izquierda para empezar.")
 
-# --- PIE DE PÁGINA LEGAL ---
+# Aviso legal con el ⚠️ al inicio
 st.sidebar.markdown("---")
 st.sidebar.caption("⚠️ Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
