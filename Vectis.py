@@ -5,6 +5,7 @@ import pandas as pd
 
 # 1. FUNCIONES AUXILIARES
 def check_special_stats(row):
+    """Calcula si el partido es Triple-Doble o Doble-Doble"""
     stats = [row['PTS'], row['REB'], row['AST'], row['STL'], row['BLK']]
     diez_o_mas = sum(1 for x in stats if x >= 10)
     if diez_o_mas >= 3: return "TD"
@@ -12,9 +13,11 @@ def check_special_stats(row):
     return "-"
 
 def color_mercado(val, linea):
+    """Aplica color verde si supera la línea, rojo si no"""
     color = '#2ecc71' if val > linea else '#e74c3c'
     return f'background-color: {color}; color: white'
 
+# Diccionario de traducción para la API
 nombres_api = {"PTS": "PTS", "REB": "REB", "AST": "AST", "ROB": "STL", "TAP": "BLK"}
 
 # 2. CONFIGURACIÓN DE PÁGINA
@@ -29,9 +32,11 @@ except:
 st.sidebar.markdown("---")
 st.sidebar.header("🔍 Buscador de Patrones")
 
+# PASO 1: Buscar nombre
 busqueda = st.sidebar.text_input("1. Escribe nombre (ej: Stephen Curry):")
 player_obj = None
 
+# PASO 2: Confirmar jugador
 if busqueda:
     nba_players = players.find_players_by_full_name(busqueda)
     if nba_players:
@@ -43,19 +48,25 @@ if busqueda:
 
 st.sidebar.markdown("---")
 
-# PASO 3: Slider Inteligente
+# PASO 3: Mercado y Slider dinámico (Baremos Winamax)
 mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
 mercado_real = nombres_api[mercado_visual]
 
-# Rango dinámico: Máximo más alto para puntos, más bajo para robos/tapones
-max_valor = 60.5 if mercado_visual == "PTS" else 15.5
-valor_inicial = 20.5 if mercado_visual == "PTS" else 1.5
+# Lógica de rangos según mercado
+if mercado_visual == "PTS":
+    min_v, max_v, default_v = 5.5, 50.5, 20.5
+elif mercado_visual == "REB":
+    min_v, max_v, default_v = 2.5, 20.5, 8.5
+elif mercado_visual == "AST":
+    min_v, max_v, default_v = 1.5, 18.5, 5.5
+else: # ROB y TAP
+    min_v, max_v, default_v = 0.5, 6.5, 1.5
 
 linea_apuesta = st.sidebar.slider(
     "Línea de valor:",
-    min_value=0.5,
-    max_value=max_valor,
-    value=valor_inicial,
+    min_value=min_v,
+    max_value=max_v,
+    value=default_v,
     step=0.5
 )
 
@@ -69,45 +80,4 @@ st.title("🏀 Inteligencia Estadística NBA")
 
 if player_obj:
     try:
-        log = playergamelog.PlayerGameLog(player_id=player_obj['id'], season='2025-26')
-        df = log.get_data_frames()[0]
-        
-        if not df.empty:
-            abreviatura_equipo = df.iloc[0]['TEAM_ABBREVIATION'] if 'TEAM_ABBREVIATION' in df.columns else ""
-            suffix_equipo = f" | {abreviatura_equipo}" if abreviatura_equipo else ""
-            
-            df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE']).dt.date
-            df['SPECIAL_TYPE'] = df.apply(check_special_stats, axis=1)
-
-            st.subheader(f"Análisis detallado: {player_obj['full_name']}{suffix_equipo}")
-            
-            u15 = df.head(15)
-            overs = (u15[mercado_real] > linea_apuesta).sum()
-            
-            prob_dd = ((u15['SPECIAL_TYPE'] == 'DD').sum() / len(u15)) * 100
-            prob_td = ((u15['SPECIAL_TYPE'] == 'TD').sum() / len(u15)) * 100
-            
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric(f"Overs {mercado_visual}", f"{overs}/15", f"{int((overs/len(u15))*100)}% Acierto")
-            m2.metric("Promedio L10", f"{df.head(10)[mercado_real].mean():.1f}")
-            m3.metric("DD% (L15)", f"{prob_dd:.1f}%")
-            m4.metric("TD% (L15)", f"{prob_td:.1f}%")
-
-            st.markdown("---")
-            
-            st.write("### Historial Reciente (Últimos 15)")
-            df_tabla = df.rename(columns={'STL': 'ROB', 'BLK': 'TAP', 'SPECIAL_TYPE': 'DD/TD'})
-            cols_tabla = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'ROB', 'TAP', 'DD/TD']
-            
-            st.table(df_tabla[cols_tabla].head(15).style.map(lambda x: color_mercado(x, linea_apuesta), subset=[mercado_visual]))
-            
-            st.line_chart(df.head(15).set_index('GAME_DATE')[mercado_real])
-        else:
-            st.warning("No hay datos disponibles.")
-    except Exception as e:
-        st.error(f"Error: {e}")
-else:
-    st.info("Introduce un jugador en el buscador lateral.")
-
-st.sidebar.markdown("---")
-st.sidebar.caption("⚠️ Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
+        # Llamada a
