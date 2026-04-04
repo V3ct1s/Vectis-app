@@ -3,51 +3,81 @@ from nba_api.stats.static import players
 from nba_api.stats.endpoints import playergamelog
 import pandas as pd
 
-# --- FUNCIONES ---
+# --- FUNCIONES DE APOYO ---
 def check_special_stats(row):
     stats = [row['PTS'], row['REB'], row['AST'], row['STL'], row['BLK']]
     diez_o_mas = sum(1 for x in stats if x >= 10)
-    return "TD" if diez_o_mas >= 3 else ("DD" if diez_o_mas >= 2 else "-")
+    if diez_o_mas >= 3: return "TD"
+    if diez_o_mas >= 2: return "DD"
+    return "-"
 
 def color_mercado(val, linea):
     color = '#2ecc71' if val > linea else '#e74c3c'
     return f'background-color: {color}; color: white'
 
-# --- CONFIGURACIÓN ---
+# --- CONFIGURACIÓN Y ESTADO DE SESIÓN ---
 st.set_page_config(page_title="Vectis | NBA Analytics", layout="wide")
 
-# Inicializar el "Carrito" de apuestas en la sesión
-if 'carrito' not in st.session_state:
-    st.session_state.carrito = []
+if 'calculadora' not in st.session_state:
+    st.session_state.calculadora = []
 
-# Sidebar
+nombres_api = {"PTS": "PTS", "REB": "REB", "AST": "AST", "ROB": "STL", "TAP": "BLK"}
+
+# --- SIDEBAR (COMUNIDAD Y FILTROS) ---
 try:
     st.sidebar.image("vectis.png", use_container_width=True)
 except:
     st.sidebar.title("VECTIS NBA")
 
 st.sidebar.markdown("---")
-st.sidebar.header("🔍 Buscador")
-busqueda = st.sidebar.text_input("1. Escribe nombre:")
+st.sidebar.header("🔍 Buscador de Patrones")
 
-# --- PESTAÑAS PRINCIPALES ---
-tab1, tab2 = st.tabs(["📊 Análisis de Jugador", "🧮 Calculadora de Combinadas"])
+busqueda = st.sidebar.text_input("1. Escribe nombre (ej: Stephen Curry):")
+player_obj = None
+
+if busqueda:
+    nba_players = players.find_players_by_full_name(busqueda)
+    if nba_players:
+        nombres = [p['full_name'] for p in nba_players]
+        seleccion = st.sidebar.selectbox("2. Confirma el jugador:", nombres)
+        player_obj = next((p for p in nba_players if p['full_name'] == seleccion), None)
+    else:
+        st.sidebar.error("Jugador no encontrado.")
+
+st.sidebar.markdown("---")
+mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
+mercado_real = nombres_api[mercado_visual]
+
+# Configuración de líneas por mercado
+if mercado_visual == "PTS":
+    opciones, idx_default = [x + 0.5 for x in range(5, 51)], 15
+elif mercado_visual == "REB":
+    opciones, idx_default = [x + 0.5 for x in range(1, 21)], 7
+elif mercado_visual == "AST":
+    opciones, idx_default = [x + 0.5 for x in range(0, 19)], 5
+else:
+    opciones, idx_default = [x + 0.5 for x in range(0, 8)], 1
+
+linea_apuesta = st.sidebar.select_slider("Línea de valor (Winamax):", options=opciones, value=opciones[idx_default])
+
+st.sidebar.markdown("---")
+st.sidebar.write("### 🏀 Tienda Oficial NBA")
+st.sidebar.info("👉 [Accesorios en Amazon](https://www.amazon.es/nba-oficial/s?k=nba+oficial&tag=vectis-21)")
+
+st.sidebar.markdown("---")
+st.sidebar.header("🚀 Comunidad")
+st.sidebar.link_button("📢 Únete al VIP en Telegram", "https://t.me/+FWyCJmqSojVhMjVk", use_container_width=True)
+st.sidebar.link_button("☕ Invita a un café", "https://www.paypal.me/VectisNBA", use_container_width=True)
+
+st.sidebar.markdown("---")
+st.sidebar.caption("⚠️ +18 | Vectis es una herramienta estadística informativa. Juega con responsabilidad.")
+
+# --- CUERPO PRINCIPAL ---
+st.title("🏀 Inteligencia Estadística NBA")
+
+tab1, tab2 = st.tabs(["📊 Análisis en Tiempo Real", "🧮 Calculadora de Probabilidades"])
 
 with tab1:
-    player_obj = None
-    if busqueda:
-        nba_players = players.find_players_by_full_name(busqueda)
-        if nba_players:
-            nombres = [p['full_name'] for p in nba_players]
-            seleccion = st.sidebar.selectbox("2. Confirma el jugador:", nombres)
-            player_obj = next((p for p in nba_players if p['full_name'] == seleccion), None)
-
-    st.sidebar.markdown("---")
-    mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
-    nombres_api = {"PTS": "PTS", "REB": "REB", "AST": "AST", "ROB": "STL", "TAP": "BLK"}
-    
-    linea_apuesta = st.sidebar.select_slider("Línea de valor:", options=[x + 0.5 for x in range(0, 55)], value=15.5)
-
     if player_obj:
         try:
             log = playergamelog.PlayerGameLog(player_id=player_obj['id'], season='2025-26')
@@ -56,70 +86,6 @@ with tab1:
             if not df.empty:
                 df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE']).dt.date
                 df['SPECIAL_TYPE'] = df.apply(check_special_stats, axis=1)
+                promedio_l10 = df.head(10)[mercado_real].mean()
                 
-                equipo_abr = df.iloc[0]['TEAM_ABBREVIATION'] if 'TEAM_ABBREVIATION' in df.columns else ""
-                nombre_completo = f"{player_obj['full_name']} | {equipo_abr}"
-                
-                # Estadísticas
-                u15 = df.head(15)
-                overs = (u15[nombres_api[mercado_visual]] > linea_apuesta).sum()
-                porcentaje_exito = (overs / 15)
-
-                # BOTÓN PARA AÑADIR A LA CALCULADORA
-                if st.button(f"➕ Añadir {nombre_display if 'nombre_display' in locals() else nombre_completo} a la Combinada"):
-                    st.session_state.carrito.append({
-                        "jugador": nombre_completo,
-                        "mercado": mercado_visual,
-                        "linea": linea_apuesta,
-                        "prob": porcentaje_exito
-                    })
-                    st.toast(f"Añadido: {nombre_completo}")
-
-                # (Aquí va todo tu diseño visual de gráficas y tablas que ya tenías...)
-                st.subheader(f"Análisis: {nombre_completo}")
-                st.metric("Probabilidad de Éxito (L15)", f"{int(porcentaje_exito*100)}%")
-                st.dataframe(df.head(15)[['GAME_DATE', 'MATCHUP', 'PTS', 'REB', 'AST']], use_container_width=True)
-                
-            else:
-                st.warning("No hay datos disponibles.")
-        except Exception as e:
-            st.error(f"Error: {e}")
-
-with tab2:
-    st.header("🧮 Simulador de Probabilidad Real")
-    
-    if not st.session_state.carrito:
-        st.info("El carrito está vacío. Ve a la pestaña de análisis y añade jugadores.")
-    else:
-        col_calc1, col_calc2 = st.columns([2, 1])
-        
-        with col_calc1:
-            st.write("### Tus Selecciones")
-            prob_acumulada = 1.0
-            cuota_total = 1.0
-            
-            for i, pick in enumerate(st.session_state.carrito):
-                with st.expander(f"{pick['jugador']} - Over {pick['linea']} {pick['mercado']}"):
-                    cuota = st.number_input(f"Cuota de este pick:", min_value=1.01, value=1.85, key=f"cuota_{i}")
-                    st.write(f"Probabilidad estadística: **{int(pick['prob']*100)}%**")
-                    prob_acumulada *= pick['prob']
-                    cuota_total *= cuota
-                    if st.button("Eliminar", key=f"del_{i}"):
-                        st.session_state.carrito.pop(i)
-                        st.rerun()
-
-        with col_calc2:
-            st.write("### Resultado Final")
-            st.metric("Probabilidad Combinada", f"{int(prob_acumulada*100)}%")
-            st.metric("Cuota Total Estimada", f"{cuota_total:.2f}")
-            
-            ganancia_potencial = 10 * cuota_total
-            st.write(f"Si apuestas 10€, ganarías **{ganancia_potencial:.2f}€**")
-            
-            if st.button("Limpiar Calculadora"):
-                st.session_state.carrito = []
-                st.rerun()
-
-# Sidebar Final
-st.sidebar.markdown("---")
-st.sidebar.info("🛒 [Tienda NBA Amazon](https://www.amazon.es/nba-oficial/s?k=nba+oficial&tag=vectis-21)")
+                equipo_abr = df.iloc[0]['TEAM_ABBRE
