@@ -48,11 +48,10 @@ if busqueda:
 
 st.sidebar.markdown("---")
 
-# PASO 3: Mercado y Slider dinámico (Baremos Winamax)
+# PASO 3: Mercado y Slider dinámico
 mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
 mercado_real = nombres_api[mercado_visual]
 
-# Lógica de rangos según mercado
 if mercado_visual == "PTS":
     min_v, max_v, default_v = 5.5, 50.5, 20.5
 elif mercado_visual == "REB":
@@ -80,6 +79,51 @@ st.title("🏀 Inteligencia Estadística NBA")
 
 if player_obj:
     try:
-        # Llamada a la API con los espacios correctos
+        # Llamada a la API
         log = playergamelog.PlayerGameLog(player_id=player_obj['id'], season='2025-26')
-        df = log
+        df = log.get_data_frames()[0]
+        
+        if not df.empty:
+            # Obtención de equipo
+            equipo_str = ""
+            if 'TEAM_ABBREVIATION' in df.columns:
+                equipo_str = f" | {df.iloc[0]['TEAM_ABBREVIATION']}"
+            elif 'MATCHUP' in df.columns:
+                equipo_str = f" | {df.iloc[0]['MATCHUP'].split(' ')[0]}"
+            
+            df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE']).dt.date
+            df['SPECIAL_TYPE'] = df.apply(check_special_stats, axis=1)
+
+            st.subheader(f"Análisis detallado: {player_obj['full_name']}{equipo_str}")
+            
+            u15 = df.head(15)
+            total_partidos = len(u15)
+            overs = (u15[mercado_real] > linea_apuesta).sum()
+            
+            prob_dd = ((u15['SPECIAL_TYPE'] == 'DD').sum() / total_partidos) * 100
+            prob_td = ((u15['SPECIAL_TYPE'] == 'TD').sum() / total_partidos) * 100
+            
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric(f"Overs {mercado_visual}", f"{overs}/{total_partidos}", f"{int((overs/total_partidos)*100)}% Acierto")
+            m2.metric("Promedio L10", f"{df.head(10)[mercado_real].mean():.1f}")
+            m3.metric("DD% (L15)", f"{prob_dd:.1f}%")
+            m4.metric("TD% (L15)", f"{prob_td:.1f}%")
+
+            st.markdown("---")
+            
+            st.write("### Historial Reciente (Últimos 15)")
+            df_tabla = df.rename(columns={'STL': 'ROB', 'BLK': 'TAP', 'SPECIAL_TYPE': 'DD/TD'})
+            cols_tabla = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'ROB', 'TAP', 'DD/TD']
+            
+            st.table(df_tabla[cols_tabla].head(15).style.map(lambda x: color_mercado(x, linea_apuesta), subset=[mercado_visual]))
+            st.line_chart(df.head(15).set_index('GAME_DATE')[mercado_real])
+        else:
+            st.warning("No hay datos disponibles para la temporada actual.")
+            
+    except Exception as e:
+        st.error(f"Error al obtener los datos: {e}")
+else:
+    st.info("Utiliza el buscador lateral para seleccionar un jugador.")
+
+st.sidebar.markdown("---")
+st.sidebar.caption("⚠️ Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
