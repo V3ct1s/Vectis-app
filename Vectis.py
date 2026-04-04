@@ -7,8 +7,31 @@ import pandas as pd
 st.set_page_config(page_title="Vectis NBA Pro", layout="wide")
 st.title("🏀 Vectis: NBA Intelligence Dashboard")
 
-# Barra lateral: Configuración
-st.sidebar.header("Configuración de Análisis")
+# --- BARRA LATERAL: CONFIGURACIÓN Y COMUNIDAD ---
+st.sidebar.header("🚀 Comunidad & Apoyo")
+
+# Botón de Telegram (Cámbialo por tu link real)
+st.sidebar.markdown("""
+<a href="https://t.me/TU_CANAL_DE_TELEGRAM" target="_blank">
+    <button style="width:100%; background-color:#0088cc; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">
+        📢 Unirse al Telegram Pro
+    </button>
+</a>
+""", unsafe_allow_index=True)
+
+st.sidebar.markdown("---")
+
+# Botón de Donación (PayPal / Ko-fi / BuyMeACoffee)
+st.sidebar.markdown("""
+<a href="https://www.paypal.me/TU_USUARIO" target="_blank">
+    <button style="width:100%; background-color:#ffc439; color:black; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">
+        ☕ Invítame a un café (PayPal)
+    </button>
+</a>
+""", unsafe_allow_index=True)
+
+st.sidebar.markdown("---")
+st.sidebar.header("🔍 Configuración de Análisis")
 busqueda = st.sidebar.text_input("Jugador (ej: Doncic, Tatum, Wembanyama):")
 
 # Selector de Mercado
@@ -32,7 +55,6 @@ if busqueda:
                 df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE']).dt.date
                 
                 # --- CÁLCULO DE DOBLES Y TRIPLES DOBLES ---
-                # Un doble-doble es 10+ en al menos dos de estas categorías
                 def check_double_triple(row):
                     stats = [row['PTS'], row['REB'], row['AST'], row['STL'], row['BLK']]
                     diez_o_mas = sum(1 for x in stats if x >= 10)
@@ -61,34 +83,4 @@ if busqueda:
                 elif tipo_partido == "Visitante":
                     df_final = df_final[df_final['MATCHUP'].str.contains('@')]
 
-                # --- TABLA CON ESTILO ---
-                def style_results(row):
-                    # Color basado en el mercado seleccionado
-                    color = 'background-color: #2ecc71; color: white' if row[mercado] > linea_apuesta else 'background-color: #e74c3c; color: white'
-                    # Resaltar si hizo Doble o Triple Doble
-                    sp_style = 'font-weight: bold; color: #f39c12' if row['SPECIAL'] != "-" else ''
-                    return [None, None, None, 
-                            color if mercado == "PTS" else '', 
-                            color if mercado == "REB" else '', 
-                            color if mercado == "AST" else '', 
-                            color if mercado == "STL" else '', 
-                            color if mercado == "BLK" else '', 
-                            sp_style]
-
-                cols_pro = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'SPECIAL']
-                display_df = df_final[cols_pro].head(15)
-                
-                st.subheader(f"Historial detallado: {player['full_name']}")
-                st.table(display_df.style.apply(style_results, axis=1))
-
-                # Gráfico dinámico según mercado
-                st.line_chart(display_df.set_index('GAME_DATE')[mercado])
-
-            else:
-                st.warning("No hay datos este año.")
-        except Exception as e:
-            st.error(f"Error: {e}")
-    else:
-        st.error("Jugador no encontrado.")
-else:
-    st.info("Escribe un nombre a la izquierda.")
+                # --- TABLA CON ESTILO
