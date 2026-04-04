@@ -75,16 +75,16 @@ if player_obj:
             df['SPECIAL_TYPE'] = df.apply(check_special_stats, axis=1)
             promedio_l10 = df.head(10)[mercado_real].mean()
             
-            # Sacamos el equipo
-            abreviatura = df.iloc[0]['TEAM_ABBREVIATION'] if 'TEAM_ABBREVIATION' in df.columns else ""
-            display_name = f"{player_obj['full_name']} | {abreviatura}"
+            # Obtener abreviatura del equipo
+            equipo_abr = df.iloc[0]['TEAM_ABBREVIATION'] if 'TEAM_ABBREVIATION' in df.columns else ""
+            nombre_completo = f"{player_obj['full_name']} | {equipo_abr}"
 
-            # Bloque Pick Dinámico (corregido para evitar el SyntaxError)
-            pick_html = f'<div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #e41b13; margin-bottom: 25px;"><h3 style="color: #e41b13; margin-top: 0;">🔥 ANÁLISIS DINÁMICO </h3><div style="display: flex; justify-content: space-between; align-items: center;"><div><p style="margin-bottom: 5px; font-size: 18px;"><b>Basado en búsqueda:</b> {display_name}</p><p style="margin-top: 0; font-size: 16px;"><b>Tendencia L10:</b> Promediando {promedio_l10:.1f} en {mercado_visual}</p></div><a href="https://www.winamax.es" target="_blank" style="background-color: #e41b13; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">VER CUOTA</a></div></div>'
+            # Bloque Pick Dinámico
+            pick_html = f'<div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #e41b13; margin-bottom: 25px;"><h3 style="color: #e41b13; margin-top: 0;">🔥 ANÁLISIS DINÁMICO </h3><div style="display: flex; justify-content: space-between; align-items: center;"><div><p style="margin-bottom: 5px; font-size: 18px;"><b>Basado en búsqueda:</b> {nombre_completo}</p><p style="margin-top: 0; font-size: 16px;"><b>Tendencia L10:</b> Promediando {promedio_l10:.1f} en {mercado_visual}</p></div><a href="https://www.winamax.es" target="_blank" style="background-color: #e41b13; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">VER CUOTA</a></div></div>'
             st.markdown(pick_html, unsafe_allow_html=True)
 
-            # Título de estadísticas
-            st.subheader(f"Análisis: {display_name}")
+            # Título con el equipo
+            st.subheader(f"Análisis: {nombre_completo}")
             
             u15 = df.head(15)
             overs = (u15[mercado_real] > linea_apuesta).sum()
@@ -101,8 +101,6 @@ if player_obj:
             st.write("### Historial Reciente (L15)")
             df_tabla = df.rename(columns={'STL': 'ROB', 'BLK': 'TAP', 'SPECIAL_TYPE': 'DD/TD'})
             cols_show = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'ROB', 'TAP', 'DD/TD']
-            
-            # Tabla estilizada
             st.dataframe(df_tabla[cols_show].head(15).style.map(lambda x: color_mercado(x, linea_apuesta), subset=[mercado_visual]), use_container_width=True)
             st.line_chart(df.head(15).set_index('GAME_DATE')[mercado_real])
         else:
@@ -110,8 +108,9 @@ if player_obj:
     except Exception as e:
         st.error(f"Error al cargar datos: {e}")
 else:
-    welcome_msg = '<div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #e41b13; margin-bottom: 25px;"><h3 style="color: #e41b13; margin-top: 0;">🚀 BIENVENIDO A VECTIS NBA</h3><p style="font-size: 16px;">Busca un jugador en el menú lateral para empezar.</p></div>'
+    welcome_msg = '<div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #e41b13; margin-bottom: 25px;"><h3 style="color: #e41b13; margin-top: 0;">🚀 BIENVENIDO A VECTIS NBA</h3><p style="font-size: 16px;">Busca un jugador en el menú lateral para generar un <b>Pick Estadístico</b> automáticamente.</p></div>'
     st.markdown(welcome_msg, unsafe_allow_html=True)
+    st.info("Utiliza el buscador lateral para empezar el análisis.")
 
 st.sidebar.markdown("---")
 st.sidebar.caption("⚠️ +18 | Vectis es una herramienta estadística informativa. Juega con responsabilidad.")
