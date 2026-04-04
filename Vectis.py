@@ -49,7 +49,6 @@ st.sidebar.link_button("☕ Invita a un café", "https://www.paypal.me/VectisNBA
 st.sidebar.info("🛒 [Tienda NBA Amazon](https://www.amazon.es/nba-oficial/s?k=nba+oficial&tag=vectis-21)")
 
 st.sidebar.markdown("---")
-# AVISO LEGAL PROTEGIDO PARA EVITAR SYNTAX ERROR
 st.sidebar.caption('''⚠️ +18 | Vectis es una herramienta estadística informativa. 
 Los datos ofrecidos son estadísticos y no garantizan resultados. 
 Juega con responsabilidad.''')
@@ -109,13 +108,19 @@ with t2:
         pt, ct = 1.0, 1.0
         for i, it in enumerate(st.session_state.calculadora):
             with st.container(border=True):
-                ca, cb, cc = st.columns([2, 1, 0.5])
+                ca, cb, cc, cd = st.columns([2, 1, 1, 0.5])
                 ca.write(f"**{it['j']}**")
                 ca.caption(f"{it['m']} > {it['l']}")
-                cuo = cb.number_input("Cuota:", 1.01, 100.0, 1.85, 0.01, key=f"k_{i}")
-                if cc.button("🗑️", key=f"r_{i}"):
+                
+                # NUEVA COLUMNA: Probabilidad individual del pick
+                cb.metric("Prob. Pick", f"{int(it['p']*100)}%")
+                
+                cuo = cc.number_input("Cuota:", 1.01, 100.0, 1.85, 0.01, key=f"k_{i}")
+                
+                if cd.button("🗑️", key=f"r_{i}"):
                     st.session_state.calculadora.pop(i)
                     st.rerun()
+                
                 pt *= it['p']
                 ct *= cuo
         
