@@ -22,14 +22,14 @@ st.title("🏀 Vectis: NBA Intelligence Dashboard")
 # --- BARRA LATERAL ---
 st.sidebar.header("🚀 Comunidad & Apoyo")
 st.sidebar.markdown("""
-<a href="https://t.me/TU_CANAL_DE_TELEGRAM" target="_blank">
+<a href="https://t.me/+FWyCJmqSojVhMjVk" target="_blank">
     <button style="width:100%; background-color:#0088cc; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">📢 Unirse al Telegram Pro</button>
 </a>
 """, unsafe_allow_html=True)
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("""
-<a href="https://www.paypal.me/TU_USUARIO" target="_blank">
+<a href="https://www.paypal.me/VectisNBA" target="_blank">
     <button style="width:100%; background-color:#ffc439; color:black; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">☕ Invítame a un café (PayPal)</button>
 </a>
 """, unsafe_allow_html=True)
