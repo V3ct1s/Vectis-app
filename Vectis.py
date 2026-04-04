@@ -29,14 +29,14 @@ except:
 st.sidebar.markdown("---")
 st.sidebar.header("🔍 Buscador de Patrones")
 
-busqueda = st.sidebar.text_input("1. Escribe nombre (ej: Stephen Curry):")
+busqueda = st.sidebar.text_input("Escribe nombre (ej: Stephen Curry):")
 player_obj = None
 
 if busqueda:
     nba_players = players.find_players_by_full_name(busqueda)
     if nba_players:
         nombres = [p['full_name'] for p in nba_players]
-        seleccion = st.sidebar.selectbox("2. Confirma el jugador:", nombres)
+        seleccion = st.sidebar.selectbox("Confirma el jugador:", nombres)
         player_obj = next((p for p in nba_players if p['full_name'] == seleccion), None)
     else:
         st.sidebar.error("Jugador no encontrado.")
