@@ -80,4 +80,6 @@ st.title("🏀 Inteligencia Estadística NBA")
 
 if player_obj:
     try:
-        # Llamada a
+        # Llamada a la API con los espacios correctos
+        log = playergamelog.PlayerGameLog(player_id=player_obj['id'], season='2025-26')
+        df = log
