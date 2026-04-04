@@ -43,6 +43,7 @@ st.sidebar.markdown("---")
 mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
 mercado_real = nombres_api[mercado_visual]
 
+# Ajuste dinámico de opciones de línea
 if mercado_visual == "PTS":
     opciones = [x + 0.5 for x in range(5, 51)]
     idx_default = 15
@@ -67,6 +68,7 @@ st.title("🏀 Inteligencia Estadística NBA")
 
 if player_obj:
     try:
+        # Llamada a la API para la temporada actual
         log = playergamelog.PlayerGameLog(player_id=player_obj['id'], season='2025-26')
         df = log.get_data_frames()[0]
         
@@ -75,15 +77,20 @@ if player_obj:
             df['SPECIAL_TYPE'] = df.apply(check_special_stats, axis=1)
             promedio_l10 = df.head(10)[mercado_real].mean()
             
-            # Obtener abreviatura del equipo
-            equipo_abr = df.iloc[0]['TEAM_ABBREVIATION'] if 'TEAM_ABBREVIATION' in df.columns else ""
+            # --- LÓGICA DE EQUIPO REFORZADA ---
+            # Buscamos la abreviatura del equipo en la columna correspondiente
+            if 'TEAM_ABBREVIATION' in df.columns:
+                equipo_abr = df.iloc[0]['TEAM_ABBREVIATION']
+            else:
+                equipo_abr = "N/A"
+            
             nombre_completo = f"{player_obj['full_name']} | {equipo_abr}"
 
-            # Bloque Pick Dinámico
+            # Bloque Pick Dinámico con el equipo
             pick_html = f'<div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #e41b13; margin-bottom: 25px;"><h3 style="color: #e41b13; margin-top: 0;">🔥 ANÁLISIS DINÁMICO </h3><div style="display: flex; justify-content: space-between; align-items: center;"><div><p style="margin-bottom: 5px; font-size: 18px;"><b>Basado en búsqueda:</b> {nombre_completo}</p><p style="margin-top: 0; font-size: 16px;"><b>Tendencia L10:</b> Promediando {promedio_l10:.1f} en {mercado_visual}</p></div><a href="https://www.winamax.es" target="_blank" style="background-color: #e41b13; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">VER CUOTA</a></div></div>'
             st.markdown(pick_html, unsafe_allow_html=True)
 
-            # Título con el equipo
+            # Título principal con el equipo
             st.subheader(f"Análisis: {nombre_completo}")
             
             u15 = df.head(15)
@@ -94,13 +101,16 @@ if player_obj:
             col_m1, col_m2, col_m3, col_m4 = st.columns(4)
             col_m1.metric(f"Overs {mercado_visual}", f"{overs}/15", f"{int((overs/15)*100)}% Acierto")
             col_m2.metric("Promedio L10", f"{promedio_l10:.1f}")
-            col_m3.metric("DD% (L15)", f"{prob_dd:.1f}%")
+            m3_label = "DD% (L15)"
+            col_m3.metric(m3_label, f"{prob_dd:.1f}%")
             col_m4.metric("TD% (L15)", f"{prob_td:.1f}%")
             
             st.markdown("---")
             st.write("### Historial Reciente (L15)")
             df_tabla = df.rename(columns={'STL': 'ROB', 'BLK': 'TAP', 'SPECIAL_TYPE': 'DD/TD'})
             cols_show = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'ROB', 'TAP', 'DD/TD']
+            
+            # Renderizado de tabla
             st.dataframe(df_tabla[cols_show].head(15).style.map(lambda x: color_mercado(x, linea_apuesta), subset=[mercado_visual]), use_container_width=True)
             st.line_chart(df.head(15).set_index('GAME_DATE')[mercado_real])
         else:
@@ -113,4 +123,4 @@ else:
     st.info("Utiliza el buscador lateral para empezar el análisis.")
 
 st.sidebar.markdown("---")
-st.sidebar.caption("⚠️ +18 | Vectis es una herramienta estadística informativa. Juega con responsabilidad.")
+st.sidebar.caption("⚠️ +18 | Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
