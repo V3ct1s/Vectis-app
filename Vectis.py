@@ -10,7 +10,6 @@ st.title("🏀 Vectis: NBA Intelligence Dashboard")
 # --- BARRA LATERAL: COMUNIDAD & APOYO ---
 st.sidebar.header("🚀 Comunidad & Apoyo")
 
-# Botón de Telegram
 st.sidebar.markdown("""
 <a href="https://t.me/TU_CANAL_DE_TELEGRAM" target="_blank">
     <button style="width:100%; background-color:#0088cc; color:white; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">
@@ -21,7 +20,6 @@ st.sidebar.markdown("""
 
 st.sidebar.markdown("---")
 
-# Botón de Donación (PayPal)
 st.sidebar.markdown("""
 <a href="https://www.paypal.me/TU_USUARIO" target="_blank">
     <button style="width:100%; background-color:#ffc439; color:black; border:none; padding:10px; border-radius:5px; cursor:pointer; font-weight:bold;">
@@ -34,7 +32,6 @@ st.sidebar.markdown("---")
 st.sidebar.header("🔍 Configuración de Análisis")
 busqueda = st.sidebar.text_input("Jugador (ej: Doncic, Tatum, Wembanyama):")
 
-# Selector de Mercado
 mercado = st.sidebar.selectbox("Seleccionar Mercado:", ["PTS", "REB", "AST", "STL", "BLK"])
 linea_apuesta = st.sidebar.number_input(f"Línea de {mercado}:", value=1.5 if mercado in ["STL", "BLK"] else 10.5, step=0.5)
 
@@ -47,9 +44,20 @@ if busqueda:
         player = [p for p in nba_players if p['full_name'] == seleccion][0]
         
         try:
-            # Consultar temporada actual
             log = playergamelog.PlayerGameLog(player_id=player['id'], season='2025-26')
             df = log.get_data_frames()[0]
             
             if not df.empty:
-                # --- PROCESAMIENTO ---
+                # --- PROCESAMIENTO (Aquí estaba el error de sangría) ---
+                df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE']).dt.date
+                
+                def check_double_triple(row):
+                    stats = [row['PTS'], row['REB'], row['AST'], row['STL'], row['BLK']]
+                    diez_o_mas = sum(1 for x in stats if x >= 10)
+                    if diez_o_mas >= 3: return "Triple-Double"
+                    if diez_o_mas >= 2: return "Double-Double"
+                    return "-"
+
+                df['SPECIAL'] = df.apply(check_double_triple, axis=1)
+
+                # --- MÉTRICAS ---
