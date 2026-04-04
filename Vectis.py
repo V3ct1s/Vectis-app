@@ -98,4 +98,4 @@ else:
 
 # Aviso legal actualizado según tu petición
 st.sidebar.markdown("---")
-st.sidebar.caption("Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
+st.sidebar.caption("⚠️Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
