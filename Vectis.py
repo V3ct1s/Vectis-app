@@ -15,7 +15,6 @@ def color_mercado(val, linea):
     color = '#2ecc71' if val > linea else '#e74c3c'
     return f'background-color: {color}; color: white'
 
-# Diccionario para nombres internos de la API
 nombres_api = {"PTS": "PTS", "REB": "REB", "AST": "AST", "ROB": "STL", "TAP": "BLK"}
 
 # 2. CONFIGURACIÓN DE PÁGINA
@@ -30,7 +29,7 @@ except:
 st.sidebar.markdown("---")
 st.sidebar.header("🔍 Buscador de Patrones")
 
-busqueda = st.sidebar.text_input("1. Escribe nombre (ej: Doncic):")
+busqueda = st.sidebar.text_input("1. Escribe nombre (ej: Stephen Curry):")
 player_obj = None
 
 if busqueda:
@@ -57,19 +56,26 @@ st.title("🏀 Inteligencia Estadística NBA")
 
 if player_obj:
     try:
+        # Forzamos la temporada actual 2025-26
         log = playergamelog.PlayerGameLog(player_id=player_obj['id'], season='2025-26')
         df = log.get_data_frames()[0]
         
         if not df.empty:
-            # Obtención segura del equipo para evitar el error KeyError
-            equipo = ""
+            # LÓGICA DE EXTRACCIÓN DE EQUIPO REFORZADA
+            abreviatura_equipo = ""
+            # Opción A: Columna estándar
             if 'TEAM_ABBREVIATION' in df.columns:
-                equipo = f" | {df.iloc[0]['TEAM_ABBREVIATION']}"
+                abreviatura_equipo = df.iloc[0]['TEAM_ABBREVIATION']
+            # Opción B: Si viene en el Matchup (ej: GSW @ LAL)
+            elif 'MATCHUP' in df.columns:
+                abreviatura_equipo = df.iloc[0]['MATCHUP'].split(' ')[0]
+            
+            suffix_equipo = f" | {abreviatura_equipo}" if abreviatura_equipo else ""
             
             df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE']).dt.date
             df['SPECIAL'] = df.apply(check_double_triple, axis=1)
 
-            st.subheader(f"Análisis detallado: {player_obj['full_name']}{equipo}")
+            st.subheader(f"Análisis detallado: {player_obj['full_name']}{suffix_equipo}")
             
             u15 = df.head(15)
             overs = (u15[mercado_real] > linea_apuesta).sum()
@@ -86,17 +92,16 @@ if player_obj:
             df_tabla = df.rename(columns={'STL': 'ROB', 'BLK': 'TAP'})
             cols_tabla = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'ROB', 'TAP', 'SPECIAL']
             
-            # Usamos .map para evitar el error de Styler
             st.table(df_tabla[cols_tabla].head(15).style.map(lambda x: color_mercado(x, linea_apuesta), subset=[mercado_visual]))
             
             st.line_chart(df.head(15).set_index('GAME_DATE')[mercado_real])
         else:
-            st.warning("No hay datos disponibles para esta temporada.")
+            st.warning("No hay partidos registrados para este jugador en la temporada actual.")
             
     except Exception as e:
-        st.error(f"Error en el sistema: {e}")
+        st.error(f"Error al obtener datos: {e}")
 else:
-    st.info("Utiliza el buscador de la izquierda para empezar.")
+    st.info("Introduce un nombre en el buscador para analizar sus estadísticas.")
 
 st.sidebar.markdown("---")
 st.sidebar.caption("⚠️ Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
