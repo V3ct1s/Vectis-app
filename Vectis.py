@@ -19,15 +19,16 @@ def color_mercado(val, linea):
 st.set_page_config(page_title="Vectis NBA Pro", layout="wide")
 
 # --- BARRA LATERAL ---
-# Mostrar tu logo de empresa (Asegúrate de que el archivo esté en GitHub)
+# Mostrar tu logo de empresa (vectis.png)
 try:
     st.sidebar.image("vectis.png", use_container_width=True)
 except:
     st.sidebar.title("Vectis NBA")
 
+st.sidebar.markdown("---")
 st.sidebar.header("🚀 Mi Comunidad")
 
-# Botones con enlaces directos (Sin HTML complejo para evitar errores)
+# Botones de enlace directo
 st.sidebar.link_button("📢 Telegram Pro", "https://t.me/+FWyCJmqSojVhMjVk", use_container_width=True)
 st.sidebar.link_button("☕ PayPal (Apoyar proyecto)", "https://www.paypal.me/VectisNBA", use_container_width=True)
 
@@ -39,17 +40,9 @@ busqueda = st.sidebar.text_input("Buscar Jugador (ej: Doncic):")
 mercado = st.sidebar.selectbox("Mercado:", ["PTS", "REB", "AST", "STL", "BLK"])
 linea_apuesta = st.sidebar.number_input(f"Línea de {mercado}:", value=10.5, step=0.5)
 
-# --- SECCIÓN LEGAL (LOGOS +18 Y JUGAR BIEN) ---
+# --- AVISO LEGAL DE TEXTO (Sin logos) ---
 st.sidebar.markdown("---")
-with st.sidebar.container():
-    st.markdown("### ⚠️ Juego Responsable")
-    col_logo1, col_logo2 = st.columns(2)
-    with col_logo1:
-        st.image("https://www.jugarbien.es/sites/default/files/images/logotipos/logo_18.png", width=50)
-    with col_logo2:
-        st.image("https://www.jugarbien.es/sites/default/files/images/logotipos/logo_jugarbien.png", width=100)
-    
-    st.caption("Solo mayores de 18 años. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con moderación.")
+st.sidebar.caption("⚠️ **Aviso Legal:** Vectis es una herramienta estadística informativa. No nos hacemos responsables de las decisiones tomadas basadas en estos datos. Juega con responsabilidad.")
 
 # 3. CUERPO PRINCIPAL
 st.title("🏀 NBA Intelligence Dashboard")
@@ -82,7 +75,7 @@ if busqueda:
                 st.markdown("---")
                 
                 # Tabla de datos
-                st.write("### Últimos 15 Partidos")
+                st.write("### Historial Reciente")
                 cols = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'SPECIAL']
                 st.table(df[cols].head(15).style.applymap(lambda x: color_mercado(x, linea_apuesta), subset=[mercado]))
                 
