@@ -49,7 +49,6 @@ st.sidebar.markdown("---")
 # PASO 3: Mercado y Valor
 mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
 mercado_real = nombres_api[mercado_visual]
-# CAMBIO: "Estadística" por "Línea de valor"
 linea_apuesta = st.sidebar.number_input("Línea de valor:", value=10.5, step=0.5)
 
 st.sidebar.markdown("---")
@@ -66,10 +65,14 @@ if player_obj:
         df = log.get_data_frames()[0]
         
         if not df.empty:
+            # Obtener el equipo del último partido registrado
+            ultimo_equipo = df.iloc[0]['TEAM_ABBREVIATION']
+            
             df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE']).dt.date
             df['SPECIAL'] = df.apply(check_double_triple, axis=1)
 
-            st.subheader(f"Análisis detallado: {player_obj['full_name']}")
+            # CAMBIO AQUÍ: Añadido el nombre del equipo al título
+            st.subheader(f"Análisis detallado: {player_obj['full_name']} | {ultimo_equipo}")
             
             u15 = df.head(15)
             overs = (u15[mercado_real] > linea_apuesta).sum()
