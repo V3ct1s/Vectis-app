@@ -103,3 +103,13 @@ if player_obj:
             
             prob_dd = ((u15['SPECIAL_TYPE'] == 'DD').sum() / total_partidos) * 100
             prob_td = ((u15['SPECIAL_TYPE'] == 'TD').sum() / total_partidos) * 100
+            
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric(f"Overs {mercado_visual}", f"{overs}/{total_partidos}", f"{int((overs/total_partidos)*100)}% Acierto")
+            m2.metric("Promedio L10", f"{df.head(10)[mercado_real].mean():.1f}")
+            m3.metric("DD% (L15)", f"{prob_dd:.1f}%")
+            m4.metric("TD% (L15)", f"{prob_td:.1f}%")
+
+            st.markdown("---")
+            
+            st.write("### Historial Reciente
