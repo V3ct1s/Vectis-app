@@ -73,7 +73,7 @@ st.markdown("""
                 <p style="margin-bottom: 5px;"><b>Jugador:</b> Victor Wembanyama</p>
                 <p style="margin-top: 0;"><b>Mercado:</b> Más de 3.5 Tapones @ 1.85</p>
             </div>
-            <a href="#" target="_blank" style="background-color: #e41b13; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">APOSTAR AHORA</a>
+            <a href="https://www.winamax.es" target="_blank" style="background-color: #e41b13; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">APOSTAR AHORA</a>
         </div>
     </div>
 """, unsafe_allow_html=True)
