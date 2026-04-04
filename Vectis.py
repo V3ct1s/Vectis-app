@@ -15,6 +15,9 @@ def color_mercado(val, linea):
     color = '#2ecc71' if val > linea else '#e74c3c'
     return f'background-color: {color}; color: white'
 
+# Diccionario para manejar los nombres internos de la API con los nuevos nombres visuales
+nombres_api = {"PTS": "PTS", "REB": "REB", "AST": "AST", "ROB": "STL", "TAP": "BLK"}
+
 # 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Vectis | NBA Analytics", layout="wide")
 
@@ -43,9 +46,10 @@ if busqueda:
 
 st.sidebar.markdown("---")
 
-# PASO 3: Mercado
-mercado = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "STL", "BLK"])
-linea_apuesta = st.sidebar.number_input(f"Línea de {mercado}:", value=10.5, step=0.5)
+# PASO 3: Mercado (Nombres cambiados a TAP y ROB)
+mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
+mercado_real = nombres_api[mercado_visual]
+linea_apuesta = st.sidebar.number_input(f"Línea de {mercado_visual}:", value=10.5, step=0.5)
 
 st.sidebar.markdown("---")
 st.sidebar.header("🚀 Comunidad")
@@ -67,23 +71,24 @@ if player_obj:
             st.subheader(f"Análisis detallado: {player_obj['full_name']}")
             
             u15 = df.head(15)
-            overs = (u15[mercado] > linea_apuesta).sum()
+            overs = (u15[mercado_real] > linea_apuesta).sum()
             
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric(f"Overs {mercado}", f"{overs}/15", f"{int((overs/15)*100)}% de acierto")
-            m2.metric("Promedio (L10)", f"{df.head(10)[mercado].mean():.1f}")
+            m1.metric(f"Overs {mercado_visual}", f"{overs}/15", f"{int((overs/15)*100)}% de acierto")
+            m2.metric("Promedio (L10)", f"{df.head(10)[mercado_real].mean():.1f}")
             m3.metric("Doble/Triple-Doble", f"{(u15['SPECIAL'] != '-').sum()}")
-            m4.metric("Máximo Temp.", f"{df[mercado].max()}")
+            m4.metric("Máximo Temp.", f"{df[mercado_real].max()}")
 
             st.markdown("---")
             
             st.write("### Últimos 15 encuentros")
-            cols = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'SPECIAL']
+            # Cambiamos nombres de columnas solo para la visualización de la tabla
+            df_tabla = df.rename(columns={'STL': 'ROB', 'BLK': 'TAP'})
+            cols_tabla = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'ROB', 'TAP', 'SPECIAL']
             
-            # --- CORRECCIÓN AQUÍ: Cambiamos applymap por map ---
-            st.table(df[cols].head(15).style.map(lambda x: color_mercado(x, linea_apuesta), subset=[mercado]))
+            st.table(df_tabla[cols_tabla].head(15).style.map(lambda x: color_mercado(x, linea_apuesta), subset=[mercado_visual]))
             
-            st.line_chart(df.head(15).set_index('GAME_DATE')[mercado])
+            st.line_chart(df.head(15).set_index('GAME_DATE')[mercado_real])
         else:
             st.warning("No hay datos disponibles para este jugador en la temporada actual.")
     except Exception as e:
@@ -91,5 +96,6 @@ if player_obj:
 else:
     st.info("Utiliza el buscador de la izquierda para empezar.")
 
+# Aviso legal actualizado según tu petición
 st.sidebar.markdown("---")
-st.sidebar.caption("⚠️ Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
+st.sidebar.caption("Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
