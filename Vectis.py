@@ -58,6 +58,12 @@ else:
 
 linea_apuesta = st.sidebar.select_slider("Línea de valor (Winamax):", options=opciones, value=opciones[idx_default])
 
+# --- BLOQUE AMAZON AFILIADOS ---
+st.sidebar.markdown("---")
+st.sidebar.write("### 🏀 Tienda Oficial NBA")
+st.sidebar.info("👉 [Accesorios y Balones en Amazon](https://www.amazon.es/nba-oficial/s?k=nba+oficial&tag=vectis-21)")
+# -------------------------------
+
 st.sidebar.markdown("---")
 st.sidebar.header("🚀 Comunidad")
 st.sidebar.link_button("📢 Únete al VIP en Telegram", "https://t.me/+FWyCJmqSojVhMjVk", use_container_width=True)
@@ -75,15 +81,17 @@ if player_obj:
             df['SPECIAL_TYPE'] = df.apply(check_special_stats, axis=1)
             promedio_l10 = df.head(10)[mercado_real].mean()
             
-            # Obtener abreviatura del equipo
-            equipo_abr = df.iloc[0]['TEAM_ABBREVIATION'] if 'TEAM_ABBREVIATION' in df.columns else ""
+            # Obtener abreviatura del equipo de forma segura
+            equipo_abr = ""
+            if 'TEAM_ABBREVIATION' in df.columns and len(df) > 0:
+                equipo_abr = df.iloc[0]['TEAM_ABBREVIATION']
+            
             nombre_completo = f"{player_obj['full_name']} | {equipo_abr}"
 
-            # Bloque Pick Dinámico
+            # Bloque Pick Dinámico (HTML en una sola línea para evitar errores de sintaxis)
             pick_html = f'<div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #e41b13; margin-bottom: 25px;"><h3 style="color: #e41b13; margin-top: 0;">🔥 ANÁLISIS DINÁMICO </h3><div style="display: flex; justify-content: space-between; align-items: center;"><div><p style="margin-bottom: 5px; font-size: 18px;"><b>Basado en búsqueda:</b> {nombre_completo}</p><p style="margin-top: 0; font-size: 16px;"><b>Tendencia L10:</b> Promediando {promedio_l10:.1f} en {mercado_visual}</p></div><a href="https://www.winamax.es" target="_blank" style="background-color: #e41b13; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">VER CUOTA</a></div></div>'
             st.markdown(pick_html, unsafe_allow_html=True)
 
-            # Título con el equipo
             st.subheader(f"Análisis: {nombre_completo}")
             
             u15 = df.head(15)
