@@ -88,4 +88,7 @@ with tab1:
                 df['SPECIAL_TYPE'] = df.apply(check_special_stats, axis=1)
                 promedio_l10 = df.head(10)[mercado_real].mean()
                 
-                equipo_abr = df.iloc[0]['TEAM_ABBRE
+                # Obtener abreviatura del equipo de forma segura (Corregido)
+                equipo_abr = ""
+                if 'TEAM_ABBREVIATION' in df.columns:
+                    equipo_abr = df.iloc[0]['TEAM
