@@ -3,6 +3,7 @@ from nba_api.stats.static import players
 from nba_api.stats.endpoints import playergamelog, commonplayerinfo
 import pandas as pd
 
+# 1. FUNCIONES DE APOYO
 def check_special_stats(row):
     stats = [row['PTS'], row['REB'], row['AST'], row['STL'], row['BLK']]
     diez_o_mas = sum(1 for x in stats if x >= 10)
@@ -16,6 +17,7 @@ def color_mercado(val, linea):
 
 nombres_api = {"PTS": "PTS", "REB": "REB", "AST": "AST", "ROB": "STL", "TAP": "BLK"}
 
+# 2. CONFIGURACIÓN DE PÁGINA
 st.set_page_config(page_title="Vectis | NBA Analytics", layout="wide")
 
 try:
@@ -26,15 +28,32 @@ except:
 st.sidebar.markdown("---")
 st.sidebar.header("🔍 Buscador de Patrones")
 
+# --- BUSCADOR CON EQUIPO EN EL DESPLEGABLE ---
 busqueda = st.sidebar.text_input("1. Escribe nombre (ej: Stephen Curry):")
 player_obj = None
 
 if busqueda:
     nba_players = players.find_players_by_full_name(busqueda)
     if nba_players:
-        nombres = [p['full_name'] for p in nba_players]
-        seleccion = st.sidebar.selectbox("2. Confirma el jugador:", nombres)
-        player_obj = next((p for p in nba_players if p['full_name'] == seleccion), None)
+        # Creamos una lista de opciones que incluya el equipo entre paréntesis
+        opciones_busqueda = []
+        mapping_jugadores = {}
+
+        for p in nba_players:
+            try:
+                # Obtenemos info básica para saber su equipo actual
+                p_info = commonplayerinfo.CommonPlayerInfo(player_id=p['id']).get_data_frames()[0]
+                team_abr = p_info.iloc[0]['TEAM_ABBREVIATION']
+                if not team_abr: team_abr = "Retirado/FA"
+            except:
+                team_abr = "NBA"
+            
+            label = f"{p['full_name']} ({team_abr})"
+            opciones_busqueda.append(label)
+            mapping_jugadores[label] = p
+
+        seleccion_label = st.sidebar.selectbox("2. Confirma el jugador:", opciones_busqueda)
+        player_obj = mapping_jugadores[seleccion_label]
     else:
         st.sidebar.error("Jugador no encontrado.")
 
@@ -43,31 +62,28 @@ st.sidebar.markdown("---")
 mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
 mercado_real = nombres_api[mercado_visual]
 
-opciones = [x + 0.5 for x in range(0, 55)]
-linea_apuesta = st.sidebar.select_slider("Línea de valor (Winamax):", options=opciones, value=15.5)
+opciones_slider = [x + 0.5 for x in range(0, 55)]
+linea_apuesta = st.sidebar.select_slider("Línea de valor (Winamax):", options=opciones_slider, value=15.5)
 
 st.sidebar.markdown("---")
 st.sidebar.header("🚀 Comunidad")
-st.sidebar.link_button("📢 VIP Telegram", "https://t.me/+FWyCJmqSojVhMjVk", use_container_width=True)
+st.sidebar.link_button("📢 Únete al VIP en Telegram", "https://t.me/+FWyCJmqSojVhMjVk", use_container_width=True)
 
 st.title("🏀 Inteligencia Estadística NBA")
 
 if player_obj:
     try:
-        # 1. Obtener historial de partidos
+        # Obtener log de la temporada
         log = playergamelog.PlayerGameLog(player_id=player_obj['id'], season='2025-26')
         df = log.get_data_frames()[0]
         
-        # 2. Intentar sacar el equipo del log o del perfil del jugador
-        equipo_abr = "NBA"
-        if not df.empty and 'TEAM_ABBREVIATION' in df.columns:
+        # Obtener equipo para los títulos
+        if not df.empty:
             equipo_abr = df.iloc[0]['TEAM_ABBREVIATION']
         else:
-            # Si el log está vacío, preguntamos al perfil común del jugador
-            info = commonplayerinfo.CommonPlayerInfo(player_id=player_obj['id'])
-            info_df = info.get_data_frames()[0]
-            equipo_abr = info_df.iloc[0]['TEAM_ABBREVIATION']
-
+            info = commonplayerinfo.CommonPlayerInfo(player_id=player_obj['id']).get_data_frames()[0]
+            equipo_abr = info.iloc[0]['TEAM_ABBREVIATION']
+        
         nombre_display = f"{player_obj['full_name']} | {equipo_abr}"
 
         if not df.empty:
@@ -75,7 +91,7 @@ if player_obj:
             df['SPECIAL_TYPE'] = df.apply(check_special_stats, axis=1)
             promedio_l10 = df.head(10)[mercado_real].mean()
 
-            # Bloque Pick (HTML limpio)
+            # Bloque Pick Dinámico
             pick_html = f'<div style="background-color:#1e1e1e;padding:20px;border-radius:15px;border:1px solid #e41b13;margin-bottom:25px;"><h3 style="color:#e41b13;margin-top:0;">🔥 ANÁLISIS DINÁMICO</h3><div style="display:flex;justify-content:space-between;align-items:center;"><div><p style="margin-bottom:5px;font-size:18px;"><b>{nombre_display}</b></p><p style="margin-top:0;font-size:16px;">Tendencia L10: {promedio_l10:.1f} {mercado_visual}</p></div><a href="https://www.winamax.es" target="_blank" style="background-color:#e41b13;color:white;padding:12px 25px;border-radius:8px;text-decoration:none;font-weight:bold;">VER CUOTA</a></div></div>'
             st.markdown(pick_html, unsafe_allow_html=True)
 
@@ -103,7 +119,7 @@ if player_obj:
     except Exception as e:
         st.error(f"Error al cargar datos: {e}")
 else:
-    st.markdown('<div style="background-color:#1e1e1e;padding:20px;border-radius:15px;border:1px solid #e41b13;"><h3>🚀 BIENVENIDO A VECTIS NBA</h3><p>Busca un jugador para empezar.</p></div>', unsafe_allow_html=True)
+    st.markdown('<div style="background-color:#1e1e1e;padding:20px;border-radius:15px;border:1px solid #e41b13;"><h3>🚀 BIENVENIDO A VECTIS NBA</h3><p>Busca un jugador para empezar el análisis.</p></div>', unsafe_allow_html=True)
 
 st.sidebar.markdown("---")
 st.sidebar.caption("⚠️ +18 | Vectis es una herramienta estadística informativa.")
