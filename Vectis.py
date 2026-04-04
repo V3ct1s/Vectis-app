@@ -76,7 +76,7 @@ if player_obj:
             promedio_l10 = df.head(10)[mercado_real].mean()
 
             # Bloque Pick Dinámico
-            pick_text = f'<div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #e41b13; margin-bottom: 25px;"><h3 style="color: #e41b13; margin-top: 0;">🔥 ANÁLISIS DINÁMICO (Winamax)</h3><div style="display: flex; justify-content: space-between; align-items: center;"><div><p style="margin-bottom: 5px; font-size: 18px;"><b>Basado en búsqueda:</b> {player_obj["full_name"]}</p><p style="margin-top: 0; font-size: 16px;"><b>Tendencia L10:</b> Promediando {promedio_l10:.1f} en {mercado_visual}</p></div><a href="https://www.winamax.es" target="_blank" style="background-color: #e41b13; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">VER CUOTA</a></div></div>'
+            pick_text = f'<div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #e41b13; margin-bottom: 25px;"><h3 style="color: #e41b13; margin-top: 0;">🔥 ANÁLISIS DINÁMICO </h3><div style="display: flex; justify-content: space-between; align-items: center;"><div><p style="margin-bottom: 5px; font-size: 18px;"><b>Basado en búsqueda:</b> {player_obj["full_name"]}</p><p style="margin-top: 0; font-size: 16px;"><b>Tendencia L10:</b> Promediando {promedio_l10:.1f} en {mercado_visual}</p></div><a href="https://www.winamax.es" target="_blank" style="background-color: #e41b13; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">VER CUOTA</a></div></div>'
             st.markdown(pick_text, unsafe_allow_html=True)
 
             # Estadísticas
