@@ -42,7 +42,7 @@ linea_apuesta = st.sidebar.number_input(f"Línea de {mercado}:", value=10.5, ste
 
 # --- AVISO LEGAL DE TEXTO (Sin logos) ---
 st.sidebar.markdown("---")
-st.sidebar.caption("⚠️ **Aviso Legal:** Vectis es una herramienta estadística informativa. No nos hacemos responsables de las decisiones tomadas basadas en estos datos. Juega con responsabilidad.")
+st.sidebar.caption("⚠️ Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad")
 
 # 3. CUERPO PRINCIPAL
 st.title("🏀 NBA Intelligence Dashboard")
