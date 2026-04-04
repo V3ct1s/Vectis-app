@@ -63,7 +63,7 @@ else: # ROB y TAP
 
 # Usamos select_slider para forzar que solo elija valores de la lista .5
 linea_apuesta = st.sidebar.select_slider(
-    "Línea de valor (Winamax):",
+    "Línea de valor:",
     options=opciones,
     value=opciones[idx_default],
     help="Solo valores .5 para evitar empates, tal y como en la mayoria de las casas de apuestas."
