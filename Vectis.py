@@ -45,4 +45,28 @@ st.sidebar.markdown("""
 
 # 3. LÓGICA DE DATOS
 if busqueda:
-    nba_players = players.find_players_by_full_name
+    nba_players = players.find_players_by_full_name(busqueda)
+    if nba_players:
+        player = [p for p in nba_players if p['full_name'] == st.sidebar.selectbox("Selecciona:", [p['full_name'] for p in nba_players])][0]
+        try:
+            log = playergamelog.PlayerGameLog(player_id=player['id'], season='2025-26')
+            df = log.get_data_frames()[0]
+            if not df.empty:
+                df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE']).dt.date
+                df['SPECIAL'] = df.apply(check_double_triple, axis=1)
+                
+                # DASHBOARD
+                st.subheader(f"Dashboard: {player['full_name']}")
+                u15 = df.head(15)
+                overs = (u15[mercado] > linea_apuesta).sum()
+                
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric(f"Overs {mercado}", f"{overs}/15", f"{int((overs/15)*100)}% Win Rate")
+                c2.metric("Promedio L10", f"{df.head(10)[mercado].mean():.1f}")
+                c3.metric("D-D / T-D (L15)", f"{(u15['SPECIAL'] != '-').sum()}")
+                c4.metric("Máximo", f"{df[mercado].max()}")
+
+                # TABLA
+                st.table(df[['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'SPECIAL']].head(15).style.applymap(lambda x: color_mercado(x, linea_apuesta), subset=[mercado]))
+                st.line_chart(df.head(15).set_index('GAME_DATE')[mercado])
+        except Exception as e: st.error(f"Error: {e}")
