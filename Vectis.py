@@ -77,7 +77,7 @@ st.markdown("""
                 <p style="font-size: 18px; margin-bottom: 5px;"><b>Jugador:</b> Victor Wembanyama</p>
                 <p style="font-size: 16px; margin-top: 0;"><b>Mercado:</b> Más de 3.5 Tapones @ 1.85</p>
             </div>
-            <a href="TU_LINK_DE_AFILIADO_AQUI" target="_blank" style="background-color: #e41b13; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">APOSTAR AHORA</a>
+            <a href="#" target="_blank" style="background-color: #e41b13; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">APOSTAR AHORA</a>
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -103,15 +103,3 @@ if player_obj:
             
             prob_dd = ((u15['SPECIAL_TYPE'] == 'DD').sum() / total_partidos) * 100
             prob_td = ((u15['SPECIAL_TYPE'] == 'TD').sum() / total_partidos) * 100
-            
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric(f"Overs {mercado_visual}", f"{overs}/{total_partidos}", f"{int((overs/total_partidos)*100)}% Acierto")
-            m2.metric("Promedio L10", f"{df.head(10)[mercado_real].mean():.1f}")
-            m3.metric("DD% (L15)", f"{prob_dd:.1f}%")
-            m4.metric("TD% (L15)", f"{prob_td:.1f}%")
-
-            st.markdown("---")
-            
-            st.write("### Historial Reciente (Últimos 15)")
-            df_tabla = df.rename(columns={'STL': 'ROB', 'BLK': 'TAP', 'SPECIAL_TYPE': 'DD/TD'})
-            cols_tabla = ['GAME_DATE', 'MATCHUP', 'WL',
