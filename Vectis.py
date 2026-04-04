@@ -3,7 +3,7 @@ from nba_api.stats.static import players
 from nba_api.stats.endpoints import playergamelog
 import pandas as pd
 
-# 1. FUNCIONES LÓGICAS (Colores y Triples-Dobles)
+# 1. FUNCIONES LÓGICAS
 def check_double_triple(row):
     stats = [row['PTS'], row['REB'], row['AST'], row['STL'], row['BLK']]
     diez_o_mas = sum(1 for x in stats if x >= 10)
@@ -22,7 +22,7 @@ st.title("🏀 Vectis: NBA Intelligence Dashboard")
 # --- BARRA LATERAL: COMUNIDAD, DONACIONES Y AFILIACIÓN ---
 st.sidebar.header("🚀 Mi Comunidad")
 
-# BOTÓN TELEGRAM (CON TU LINK REAL)
+# BOTÓN TELEGRAM
 st.sidebar.markdown("""
 <a href="https://t.me/+FWyCJmqSojVhMjVk" target="_blank">
     <button style="width:100%; background-color:#0088cc; color:white; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold; margin-bottom:10px;">
@@ -31,7 +31,7 @@ st.sidebar.markdown("""
 </a>
 """, unsafe_allow_html=True)
 
-# BOTÓN PAYPAL (CON TU LINK REAL)
+# BOTÓN PAYPAL
 st.sidebar.markdown("""
 <a href="https://www.paypal.me/VectisNBA" target="_blank">
     <button style="width:100%; background-color:#ffc439; color:#003087; border:none; padding:12px; border-radius:8px; cursor:pointer; font-weight:bold; margin-bottom:10px;">
@@ -43,12 +43,9 @@ st.sidebar.markdown("""
 st.sidebar.markdown("---")
 
 # BANNER DE AFILIACIÓN (DISEÑO WINAMAX)
-# Nota: Cuando tengas tu link definitivo de Winamax, sustituye "TU_LINK_AQUI"
 st.sidebar.markdown("""
 <div style="background-color:#1a1a1a; padding:20px; border-radius:12px; border: 2px solid #e74c3c; text-align:center;">
     <h3 style="color:white; margin:0; font-size:18px;">🔴 BONO WINAMAX</h3>
     <p style="color:#ffffff; font-size:13px; margin:10px 0;">¡Duplica tu primer depósito para apostar en la NBA!</p>
     <a href="TU_LINK_AQUI" target="_blank">
-        <button style="width:100%; background-color:#e74c3c; color:white; border:none; padding:12px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:15px;">👉 REGISTRARSE AQUÍ</button>
-    </a>
-    <p style="color:#888888; font-size:9px; margin-top:1
+        <button style="width:100%; background-color:#e74c3c; color:white;
