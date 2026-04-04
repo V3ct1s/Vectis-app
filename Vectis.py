@@ -46,10 +46,11 @@ if busqueda:
 
 st.sidebar.markdown("---")
 
-# PASO 3: Mercado y Estadística (Solo "Estadística")
+# PASO 3: Mercado y Valor
 mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
 mercado_real = nombres_api[mercado_visual]
-linea_apuesta = st.sidebar.number_input("Estadística:", value=10.5, step=0.5)
+# CAMBIO: "Estadística" por "Línea de valor"
+linea_apuesta = st.sidebar.number_input("Línea de valor:", value=10.5, step=0.5)
 
 st.sidebar.markdown("---")
 st.sidebar.header("🚀 Comunidad")
@@ -96,6 +97,6 @@ if player_obj:
 else:
     st.info("Utiliza el buscador de la izquierda para empezar.")
 
-# Aviso legal con el ⚠️ al inicio
+# Aviso legal
 st.sidebar.markdown("---")
 st.sidebar.caption("⚠️ Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
