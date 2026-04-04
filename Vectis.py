@@ -46,10 +46,10 @@ if busqueda:
 
 st.sidebar.markdown("---")
 
-# PASO 3: Mercado (Nombres cambiados a TAP y ROB)
+# PASO 3: Mercado y Estadística (Nombre cambiado)
 mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
 mercado_real = nombres_api[mercado_visual]
-linea_apuesta = st.sidebar.number_input(f"Línea de {mercado_visual}:", value=10.5, step=0.5)
+linea_apuesta = st.sidebar.number_input(f"Estadística de {mercado_visual}:", value=10.5, step=0.5)
 
 st.sidebar.markdown("---")
 st.sidebar.header("🚀 Comunidad")
@@ -69,33 +69,3 @@ if player_obj:
             df['SPECIAL'] = df.apply(check_double_triple, axis=1)
 
             st.subheader(f"Análisis detallado: {player_obj['full_name']}")
-            
-            u15 = df.head(15)
-            overs = (u15[mercado_real] > linea_apuesta).sum()
-            
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric(f"Overs {mercado_visual}", f"{overs}/15", f"{int((overs/15)*100)}% de acierto")
-            m2.metric("Promedio (L10)", f"{df.head(10)[mercado_real].mean():.1f}")
-            m3.metric("Doble/Triple-Doble", f"{(u15['SPECIAL'] != '-').sum()}")
-            m4.metric("Máximo Temp.", f"{df[mercado_real].max()}")
-
-            st.markdown("---")
-            
-            st.write("### Últimos 15 encuentros")
-            # Cambiamos nombres de columnas solo para la visualización de la tabla
-            df_tabla = df.rename(columns={'STL': 'ROB', 'BLK': 'TAP'})
-            cols_tabla = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'ROB', 'TAP', 'SPECIAL']
-            
-            st.table(df_tabla[cols_tabla].head(15).style.map(lambda x: color_mercado(x, linea_apuesta), subset=[mercado_visual]))
-            
-            st.line_chart(df.head(15).set_index('GAME_DATE')[mercado_real])
-        else:
-            st.warning("No hay datos disponibles para este jugador en la temporada actual.")
-    except Exception as e:
-        st.error(f"Error al conectar con la API: {e}")
-else:
-    st.info("Utiliza el buscador de la izquierda para empezar.")
-
-# Aviso legal actualizado según tu petición
-st.sidebar.markdown("---")
-st.sidebar.caption("⚠️Solo mayores de 18 años. Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
