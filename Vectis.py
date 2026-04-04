@@ -61,7 +61,7 @@ st.sidebar.info("🛒 [Tienda NBA Amazon](https://www.amazon.es/nba-oficial/s?k=
 st.sidebar.header("🚀 Comunidad")
 st.sidebar.link_button("📢 VIP Telegram", "https://t.me/+FWyCJmqSojVhMjVk", use_container_width=True)
 st.sidebar.link_button("☕ Invitar Café", "https://www.paypal.me/VectisNBA", use_container_width=True)
-st.sidebar.caption("⚠️ +18 | Juega con responsabilidad.")
+st.sidebar.caption("⚠️ +18 | Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
 
 st.title("🏀 Inteligencia Estadística NBA")
 
