@@ -31,7 +31,7 @@ st.sidebar.header("🔍 Buscador de Patrones")
 busqueda = st.sidebar.text_input("1. Escribe nombre (ej: Doncic):")
 player_obj = None
 
-# PASO 2: Confirmar jugador (MOVIDO AQUÍ)
+# PASO 2: Confirmar jugador
 if busqueda:
     nba_players = players.find_players_by_full_name(busqueda)
     if nba_players:
@@ -79,7 +79,9 @@ if player_obj:
             
             st.write("### Últimos 15 encuentros")
             cols = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'STL', 'BLK', 'SPECIAL']
-            st.table(df[cols].head(15).style.applymap(lambda x: color_mercado(x, linea_apuesta), subset=[mercado]))
+            
+            # --- CORRECCIÓN AQUÍ: Cambiamos applymap por map ---
+            st.table(df[cols].head(15).style.map(lambda x: color_mercado(x, linea_apuesta), subset=[mercado]))
             
             st.line_chart(df.head(15).set_index('GAME_DATE')[mercado])
         else:
