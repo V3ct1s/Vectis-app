@@ -5,7 +5,6 @@ import pandas as pd
 
 # 1. FUNCIONES AUXILIARES
 def check_special_stats(row):
-    """Retorna si es Triple-Doble, Doble-Doble o nada"""
     stats = [row['PTS'], row['REB'], row['AST'], row['STL'], row['BLK']]
     diez_o_mas = sum(1 for x in stats if x >= 10)
     if diez_o_mas >= 3: return "TD"
@@ -43,9 +42,22 @@ if busqueda:
         st.sidebar.error("Jugador no encontrado.")
 
 st.sidebar.markdown("---")
+
+# PASO 3: Slider Inteligente
 mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
 mercado_real = nombres_api[mercado_visual]
-linea_apuesta = st.sidebar.number_input("Línea de valor:", value=10.5, step=0.5)
+
+# Rango dinámico: Máximo más alto para puntos, más bajo para robos/tapones
+max_valor = 60.5 if mercado_visual == "PTS" else 15.5
+valor_inicial = 20.5 if mercado_visual == "PTS" else 1.5
+
+linea_apuesta = st.sidebar.slider(
+    "Línea de valor:",
+    min_value=0.5,
+    max_value=max_valor,
+    value=valor_inicial,
+    step=0.5
+)
 
 st.sidebar.markdown("---")
 st.sidebar.header("🚀 Comunidad")
@@ -61,45 +73,29 @@ if player_obj:
         df = log.get_data_frames()[0]
         
         if not df.empty:
-            # Extracción de equipo
-            abreviatura_equipo = ""
-            if 'TEAM_ABBREVIATION' in df.columns:
-                abreviatura_equipo = df.iloc[0]['TEAM_ABBREVIATION']
-            elif 'MATCHUP' in df.columns:
-                abreviatura_equipo = df.iloc[0]['MATCHUP'].split(' ')[0]
-            
+            abreviatura_equipo = df.iloc[0]['TEAM_ABBREVIATION'] if 'TEAM_ABBREVIATION' in df.columns else ""
             suffix_equipo = f" | {abreviatura_equipo}" if abreviatura_equipo else ""
             
             df['GAME_DATE'] = pd.to_datetime(df['GAME_DATE']).dt.date
-            # Aplicamos la lógica DD/TD
             df['SPECIAL_TYPE'] = df.apply(check_special_stats, axis=1)
 
             st.subheader(f"Análisis detallado: {player_obj['full_name']}{suffix_equipo}")
             
-            # Cálculos sobre los últimos 15 partidos (L15)
             u15 = df.head(15)
-            total_u15 = len(u15)
             overs = (u15[mercado_real] > linea_apuesta).sum()
             
-            # Cálculo de porcentajes DD y TD
-            count_dd = (u15['SPECIAL_TYPE'] == 'DD').sum()
-            count_td = (u15['SPECIAL_TYPE'] == 'TD').sum()
-            
-            # El Triple-Doble también cuenta como Doble-Doble estadísticamente en la mayoría de sitios
-            # pero aquí los separamos para mayor claridad.
-            prob_dd = (count_dd / total_u15) * 100
-            prob_td = (count_td / total_u15) * 100
+            prob_dd = ((u15['SPECIAL_TYPE'] == 'DD').sum() / len(u15)) * 100
+            prob_td = ((u15['SPECIAL_TYPE'] == 'TD').sum() / len(u15)) * 100
             
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric(f"Overs {mercado_visual}", f"{overs}/{total_u15}", f"{int((overs/total_u15)*100)}% Acierto")
+            m1.metric(f"Overs {mercado_visual}", f"{overs}/15", f"{int((overs/len(u15))*100)}% Acierto")
             m2.metric("Promedio L10", f"{df.head(10)[mercado_real].mean():.1f}")
-            m3.metric("DD% (L15)", f"{prob_dd:.1f}%", f"{count_dd} veces")
-            m4.metric("TD% (L15)", f"{prob_td:.1f}%", f"{count_td} veces")
+            m3.metric("DD% (L15)", f"{prob_dd:.1f}%")
+            m4.metric("TD% (L15)", f"{prob_td:.1f}%")
 
             st.markdown("---")
             
             st.write("### Historial Reciente (Últimos 15)")
-            # Traducimos para la tabla
             df_tabla = df.rename(columns={'STL': 'ROB', 'BLK': 'TAP', 'SPECIAL_TYPE': 'DD/TD'})
             cols_tabla = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'ROB', 'TAP', 'DD/TD']
             
@@ -107,8 +103,7 @@ if player_obj:
             
             st.line_chart(df.head(15).set_index('GAME_DATE')[mercado_real])
         else:
-            st.warning("Sin datos para la temporada 2025-26.")
-            
+            st.warning("No hay datos disponibles.")
     except Exception as e:
         st.error(f"Error: {e}")
 else:
