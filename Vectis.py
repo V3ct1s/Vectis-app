@@ -113,4 +113,4 @@ else:
     st.info("Busca un jugador en el menú lateral.")
 
 st.sidebar.markdown("---")
-st.sidebar.caption("⚠️ +18 | Juega con responsabilidad.")
+st.sidebar.caption("⚠️ +18 | Vectis es una herramienta estadística informativa. Juega con responsabilidad.")
