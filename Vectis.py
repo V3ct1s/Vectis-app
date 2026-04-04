@@ -3,7 +3,6 @@ from nba_api.stats.static import players
 from nba_api.stats.endpoints import playergamelog
 import pandas as pd
 
-# 1. FUNCIONES LÓGICAS
 def check_special_stats(row):
     stats = [row['PTS'], row['REB'], row['AST'], row['STL'], row['BLK']]
     diez_o_mas = sum(1 for x in stats if x >= 10)
@@ -17,40 +16,54 @@ def color_mercado(val, linea):
 
 nombres_api = {"PTS": "PTS", "REB": "REB", "AST": "AST", "ROB": "STL", "TAP": "BLK"}
 
-# 2. CONFIGURACIÓN DE LA PÁGINA
-st.set_page_config(page_title="Vectis NBA", layout="wide")
+st.set_page_config(page_title="Vectis | NBA Analytics", layout="wide")
 
-# --- BARRA LATERAL ---
 try:
     st.sidebar.image("vectis.png", use_container_width=True)
 except:
     st.sidebar.title("VECTIS NBA")
 
-st.sidebar.header("🔍 Buscador de Jugadores")
-busqueda = st.sidebar.text_input("Escribe un nombre (ej: Curry):")
+st.sidebar.markdown("---")
+st.sidebar.header("🔍 Buscador de Patrones")
+
+busqueda = st.sidebar.text_input("1. Escribe nombre (ej: Stephen Curry):")
 player_obj = None
 
 if busqueda:
     nba_players = players.find_players_by_full_name(busqueda)
     if nba_players:
         nombres = [p['full_name'] for p in nba_players]
-        seleccion = st.sidebar.selectbox("Confirma el jugador:", nombres)
+        seleccion = st.sidebar.selectbox("2. Confirma el jugador:", nombres)
         player_obj = next((p for p in nba_players if p['full_name'] == seleccion), None)
+    else:
+        st.sidebar.error("Jugador no encontrado.")
 
 st.sidebar.markdown("---")
+
 mercado_visual = st.sidebar.selectbox("Mercado a analizar:", ["PTS", "REB", "AST", "ROB", "TAP"])
 mercado_real = nombres_api[mercado_visual]
-linea_apuesta = st.sidebar.number_input("Línea Winamax:", value=15.5, step=1.0)
 
-# --- BANNER AMAZON ESPAÑA (PROTEGIDO CONTRA ERRORES) ---
+if mercado_visual == "PTS":
+    opciones = [x + 0.5 for x in range(5, 51)]
+    idx_default = 15
+elif mercado_visual == "REB":
+    opciones = [x + 0.5 for x in range(1, 21)]
+    idx_default = 7
+elif mercado_visual == "AST":
+    opciones = [x + 0.5 for x in range(0, 19)]
+    idx_default = 5
+else:
+    opciones = [x + 0.5 for x in range(0, 8)]
+    idx_default = 1
+
+linea_apuesta = st.sidebar.select_slider("Línea de valor (Winamax):", options=opciones, value=opciones[idx_default])
+
 st.sidebar.markdown("---")
-st.sidebar.write("### 🇪🇸 Ofertas NBA España")
-amazon_es_url = "https://www.amazon.es/gp/browse.html?node=2945785031&tag=vectis-21"
-amazon_html = f'<a href="{amazon_es_url}" target="_blank" style="text-decoration: none;"><div style="background-color: #232f3e; padding: 15px; border-radius: 12px; text-align: center; color: white; border: 1px solid #ff9900;"><img src="https://m.media-amazon.com/images/I/71IsS6vS6sL._AC_SX679_.jpg" width="85%" style="border-radius: 5px;"><p style="font-size: 14px; margin: 12px 0 5px 0; font-weight: bold; color: #ff9900;">Equipamiento NBA</p><p style="font-size: 12px; margin: 0 0 10px 0; opacity: 0.9;">Balones y Camisetas</p><div style="background-color: #ff9900; color: black; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 14px;">VER EN AMAZON.ES</div></div></a>'
-st.sidebar.markdown(amazon_html, unsafe_allow_html=True)
+st.sidebar.header("🚀 Comunidad")
+st.sidebar.link_button("📢 Únete al VIP en Telegram", "https://t.me/+FWyCJmqSojVhMjVk", use_container_width=True)
+st.sidebar.link_button("☕ Invita a un café", "https://www.paypal.me/VectisNBA", use_container_width=True)
 
-# 3. CUERPO PRINCIPAL
-st.title("🏀 Vectis Analytics")
+st.title("🏀 Inteligencia Estadística NBA")
 
 if player_obj:
     try:
@@ -62,31 +75,39 @@ if player_obj:
             df['SPECIAL_TYPE'] = df.apply(check_special_stats, axis=1)
             promedio_l10 = df.head(10)[mercado_real].mean()
 
-            # Cuadro de Pick Dinámico (UNA SOLA LÍNEA PARA EVITAR SYNTAXERROR)
-            pick_html = f'<div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 2px solid #e41b13; margin-bottom: 25px;"><h4 style="color: #e41b13; margin-top: 0; letter-spacing: 1px;">🔥 ANÁLISIS DINÁMICO</h4><p style="margin: 0; font-size: 18px;"><b>{player_obj["full_name"]}</b></p><p style="margin: 5px 0; font-size: 15px; color: #cccccc;">Tendencia L10: {promedio_l10:.1f} {mercado_visual}</p><a href="https://www.winamax.es" target="_blank" style="display: block; background-color: #e41b13; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 15px; font-size: 16px;">VER CUOTA EN WINAMAX</a></div>'
-            st.markdown(pick_html, unsafe_allow_html=True)
+            # Bloque Pick Dinámico
+            pick_text = f'<div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #e41b13; margin-bottom: 25px;"><h3 style="color: #e41b13; margin-top: 0;">🔥 ANÁLISIS DINÁMICO </h3><div style="display: flex; justify-content: space-between; align-items: center;"><div><p style="margin-bottom: 5px; font-size: 18px;"><b>Basado en búsqueda:</b> {player_obj["full_name"]}</p><p style="margin-top: 0; font-size: 16px;"><b>Tendencia L10:</b> Promediando {promedio_l10:.1f} en {mercado_visual}</p></div><a href="https://www.winamax.es" target="_blank" style="background-color: #e41b13; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold;">VER CUOTA</a></div></div>'
+            st.markdown(pick_text, unsafe_allow_html=True)
 
-            st.subheader(f"Rendimiento: {player_obj['full_name']}")
-            m1, m2, m3 = st.columns(3)
-            overs_l15 = (df.head(15)[mercado_real] > linea_apuesta).sum()
-            m1.metric(f"Overs {mercado_visual}", f"{overs_l15}/15", f"{int((overs_l15/15)*100)}%")
-            m2.metric("Promedio L10", f"{promedio_l10:.1f}")
-            m3.metric("Doble-Doble %", f"{int(((df.head(15)['SPECIAL_TYPE']=='DD').sum()/15)*100)}%")
+            # Estadísticas
+            equipo = df.iloc[0]['TEAM_ABBREVIATION'] if 'TEAM_ABBREVIATION' in df.columns else ""
+            st.subheader(f"Análisis: {player_obj['full_name']} | {equipo}")
             
-            st.write("### Historial Reciente")
+            u15 = df.head(15)
+            overs = (u15[mercado_real] > linea_apuesta).sum()
+            prob_dd = ((u15['SPECIAL_TYPE'] == 'DD').sum() / 15) * 100
+            prob_td = ((u15['SPECIAL_TYPE'] == 'TD').sum() / 15) * 100
+            
+            col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+            col_m1.metric(f"Overs {mercado_visual}", f"{overs}/15", f"{int((overs/15)*100)}% Acierto")
+            col_m2.metric("Promedio L10", f"{promedio_l10:.1f}")
+            col_m3.metric("DD% (L15)", f"{prob_dd:.1f}%")
+            col_m4.metric("TD% (L15)", f"{prob_td:.1f}%")
+            
+            st.markdown("---")
+            st.write("### Historial Reciente (L15)")
             df_tabla = df.rename(columns={'STL': 'ROB', 'BLK': 'TAP', 'SPECIAL_TYPE': 'DD/TD'})
-            cols_ver = ['GAME_DATE', 'MATCHUP', 'PTS', 'REB', 'AST', 'DD/TD']
-            st.dataframe(df_tabla[cols_ver].head(15), use_container_width=True)
+            cols_show = ['GAME_DATE', 'MATCHUP', 'WL', 'PTS', 'REB', 'AST', 'ROB', 'TAP', 'DD/TD']
+            st.table(df_tabla[cols_show].head(15).style.map(lambda x: color_mercado(x, linea_apuesta), subset=[mercado_visual]))
             st.line_chart(df.head(15).set_index('GAME_DATE')[mercado_real])
         else:
-            st.warning("No hay partidos este año para este jugador.")
+            st.warning("No hay datos disponibles para esta temporada.")
     except Exception as e:
-        st.error(f"Error: {e}")
+        st.error(f"Error al cargar datos: {e}")
 else:
-    welcome_html = '<div style="background-color: #1e1e1e; padding: 25px; border-radius: 15px; border: 1px solid #e41b13; margin-bottom: 25px;"><h3 style="color: #e41b13; margin-top: 0;">🚀 BIENVENIDO A VECTIS NBA</h3><p style="font-size: 16px;">Busca un jugador en el lateral para ver el <b>Pick Automático</b>.</p></div>'
+    welcome_html = '<div style="background-color: #1e1e1e; padding: 20px; border-radius: 15px; border: 1px solid #e41b13; margin-bottom: 25px;"><h3 style="color: #e41b13; margin-top: 0;">🚀 BIENVENIDO A VECTIS NBA</h3><p style="font-size: 16px;">Busca un jugador en el menú lateral para generar un <b>Pick Estadístico</b> automáticamente.</p></div>'
     st.markdown(welcome_html, unsafe_allow_html=True)
+    st.info("Utiliza el buscador lateral para empezar el análisis.")
 
-# --- PIE DE PÁGINA ---
 st.sidebar.markdown("---")
-st.sidebar.link_button("📢 Canal VIP Telegram", "https://t.me/+FWyCJmqSojVhMjVk", use_container_width=True)
 st.sidebar.caption("⚠️ +18 | Vectis es una herramienta estadística informativa. Los datos ofrecidos son estadísticos y no garantizan resultados. Juega con responsabilidad.")
