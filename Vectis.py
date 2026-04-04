@@ -66,7 +66,7 @@ linea_apuesta = st.sidebar.select_slider(
     "Línea de valor (Winamax):",
     options=opciones,
     value=opciones[idx_default],
-    help="Solo valores .5 para evitar empates, tal como en las casas de apuestas."
+    help="Solo valores .5 para evitar empates, tal y como en la mayoria de las casas de apuestas."
 )
 
 st.sidebar.markdown("---")
