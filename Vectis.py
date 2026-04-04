@@ -27,9 +27,9 @@ except:
     st.sidebar.title("VECTIS NBA")
 
 st.sidebar.markdown("---")
-st.sidebar.header("🔍 Buscador de Patrones")
+st.sidebar.header("🔍 Buscador")
 
-busqueda = st.sidebar.text_input("Escribe nombre (ej: Stephen Curry):")
+busqueda = st.sidebar.text_input("Escribe el nombre (ej: Stephen Curry):")
 player_obj = None
 
 if busqueda:
